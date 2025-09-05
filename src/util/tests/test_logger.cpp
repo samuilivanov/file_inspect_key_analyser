@@ -14,7 +14,14 @@
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-int main(int argc, char const *argv[]) {
-  /* code */
-  return 0;
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include "doctest/doctest.h"
+#include "msg.h"
+
+TEST_CASE("bip39_ctx initializes and sets entropy") {
+  msg_logger::msg_logger_init("test_logs.log");
+  // Basic messages
+  msg_logger::log_info("This is an info message");
+  //   msg_debug("Debug value: x={}", 42);
+  //   msg_error("An error occurred: code={}", -1);
 }
