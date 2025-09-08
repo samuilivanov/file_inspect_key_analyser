@@ -28,8 +28,7 @@ int main(int argc, char const *argv[]) {
   fika::detect::detector d;
   for (int i = 1; i < argc; ++i) {
     auto result = d.detect_file(argv[i]);
-    msg_logger::log_info(std::string("Detect file: ") + argv[i] + ": " +
-                         result.mime_type);
+    msg_logger::log_info("Detect file: {}: {}", argv[i], result.mime_type);
     std::cout << argv[i] << ": " << result.mime_type << " (" << result.source
               << ")\n";
   }

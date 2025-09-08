@@ -45,38 +45,71 @@ void msg_logger_init(const std::string &log_file = "app.log");
 
 inline std::string_view filename_only(std::string_view path) {
   auto pos = path.find_last_of("/\\");
-    if (pos == std::string_view::npos) return path;
+  if (pos == std::string_view::npos)
+    return path;
   return path.substr(pos + 1);
 }
-inline void
-log_debug(const std::string &msg,
-          const std::source_location &loc = std::source_location::current()) {
-  BOOST_LOG_TRIVIAL(debug) << fmt::format(
-      "[{}:{}] {}", filename_only(loc.file_name()), loc.line(), msg);
-}
-inline void
-log_info(const std::string &msg,
-         const std::source_location &loc = std::source_location::current()) {
-  BOOST_LOG_TRIVIAL(info) << fmt::format(
-      "[{}:{}] {}", filename_only(loc.file_name()), loc.line(), msg);
-}
-inline void
-log_warn(const std::string &msg,
-         const std::source_location &loc = std::source_location::current()) {
-  BOOST_LOG_TRIVIAL(warning) << fmt::format(
-      "[{}:{}] {}", filename_only(loc.file_name()), loc.line(), msg);
-}
-inline void
-log_error(const std::string &msg,
-          const std::source_location &loc = std::source_location::current()) {
-  BOOST_LOG_TRIVIAL(error) << fmt::format(
-      "[{}:{}] {}", filename_only(loc.file_name()), loc.line(), msg);
-}
-inline void log_critical(
-    const std::string &msg,
-    const std::source_location &loc = std::source_location::current()) {
-  BOOST_LOG_TRIVIAL(fatal) << fmt::format(
-      "[{}:{}] {}", filename_only(loc.file_name()), loc.line(), msg);
-}
+
+template <typename... Ts> struct log_debug {
+  log_debug(const std::string &fmt, Ts &&...ts,
+            const std::source_location &loc = std::source_location::current()) {
+    std::string msg = fmt::vformat(fmt, fmt::make_format_args(ts...));
+    BOOST_LOG_TRIVIAL(debug) << fmt::format(
+        "[{}:{}] {}", filename_only(loc.file_name()), loc.line(), msg);
+  }
+};
+
+template <typename... Ts>
+log_debug(const std::string &, Ts &&...) -> log_debug<Ts...>;
+
+template <typename... Ts> struct log_info {
+  log_info(const std::string &fmt, Ts &&...ts,
+           const std::source_location &loc = std::source_location::current()) {
+    std::string msg = fmt::vformat(fmt, fmt::make_format_args(ts...));
+    BOOST_LOG_TRIVIAL(info) << fmt::format(
+        "[{}:{}] {}", filename_only(loc.file_name()), loc.line(), msg);
+  }
+};
+
+template <typename... Ts>
+log_info(const std::string &, Ts &&...) -> log_info<Ts...>;
+
+template <typename... Ts> struct log_warn {
+  log_warn(const std::string &fmt, Ts &&...ts,
+           const std::source_location &loc = std::source_location::current()) {
+    std::string msg = fmt::vformat(fmt, fmt::make_format_args(ts...));
+    BOOST_LOG_TRIVIAL(warning) << fmt::format(
+        "[{}:{}] {}", filename_only(loc.file_name()), loc.line(), msg);
+  }
+};
+
+template <typename... Ts>
+log_warn(const std::string &, Ts &&...) -> log_warn<Ts...>;
+
+template <typename... Ts> struct log_error {
+  log_error(const std::string &fmt, Ts &&...ts,
+            const std::source_location &loc = std::source_location::current()) {
+    std::string msg = fmt::vformat(fmt, fmt::make_format_args(ts...));
+    BOOST_LOG_TRIVIAL(error) << fmt::format(
+        "[{}:{}] {}", filename_only(loc.file_name()), loc.line(), msg);
+  }
+};
+
+template <typename... Ts>
+log_error(const std::string &, Ts &&...) -> log_error<Ts...>;
+
+template <typename... Ts> struct log_critical {
+  log_critical(
+      const std::string &fmt, Ts &&...ts,
+      const std::source_location &loc = std::source_location::current()) {
+    std::string msg = fmt::vformat(fmt, fmt::make_format_args(ts...));
+    BOOST_LOG_TRIVIAL(fatal) << fmt::format(
+        "[{}:{}] {}", filename_only(loc.file_name()), loc.line(), msg);
+  }
+};
+
+template <typename... Ts>
+log_critical(const std::string &, Ts &&...) -> log_critical<Ts...>;
+
 } // namespace msg_logger
 #endif
