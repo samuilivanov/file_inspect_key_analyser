@@ -29,6 +29,7 @@ find_package(Boost REQUIRED COMPONENTS log thread system)
 add_subdirectory(src/fika) 
 add_subdirectory(src/util)
 add_subdirectory(src/detect)
+add_subdirectory(src/qm)
 
 if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR MODERN_CMAKE_BUILD_TESTING)
    AND BUILD_TESTING)

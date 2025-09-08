@@ -14,23 +14,21 @@
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef FILE_JOB_H
-#define FILE_JOB_H
-
-#include <filesystem>
-#include <string>
+#ifndef STATE_MACHINE_H
+#define STATE_MACHINE_H
+#include "file_job.h"
+#include <functional>
+#include <map>
 
 namespace fika {
-enum class Status { NEW, DETECTING, PARSING, DONE, FAILED };
-enum class Event { SUBMIT, DETECTION_OK, DETECTION_FAIL, PARSE_OK, PARSE_FAIL };
-enum class JobType { DETECTOR, PARSER, NONE };
 
-struct file_job {
-  std::string id;
-  std::filesystem::path path;
-  int attempts = 0;
-  Status status;
-  JobType type;
+struct state_machine {
+  std::map<std::pair<Status, Event>, std::function<Status(file_job &)>>
+      transitions;
+
+  state_machine();
+
+  bool apply(file_job &job, Event ev);
 };
 } // namespace fika
 
