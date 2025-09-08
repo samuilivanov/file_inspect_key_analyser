@@ -20,11 +20,6 @@
 #include <filesystem>
 
 namespace fika {
-void qm::main_loop() {
-  while (true) {
-    handle_next_job();
-  }
-}
 void qm::setup() {
   std::filesystem::path root = "/home/samuil/Projects/fika/tmp/var/spool/fika";
   std::array<std::string, 4> subdirs{"new", "processing", "done", "failed"};
@@ -37,35 +32,60 @@ void qm::setup() {
   scan_new_files();
 }
 
-void qm::add_job(const file_job &job) { file_queue.push_back(job); }
+void qm::add_job(file_job job) {
+  job.status = Status::NEW;
+  jobs_in_memory.push_back(job);
+  std::cout << "[QM] Registered job " << job.id << "\n";
 
-void qm::handle_next_job() {
-  if (file_queue.empty())
-    return;
-  auto job = file_queue.front();
-  switch (job.status) {
-  case file_job::STATUS::NEW:
-    /* code */
-    break;
+  // Submit event drives the FSM
+  handle_event(jobs_in_memory.back(), Event::SUBMIT);
+}
 
-  default:
-    break;
+void qm::process_results() {
+  file_job result;
+  while (ipc.try_receive_result(result)) {
+    for (auto &j : jobs_in_memory) {
+      if (j.id == result.id) {
+        // Map result status -> FSM event
+        if (result.status == Status::DETECTING)
+          handle_event(j, Event::DETECTION_OK);
+        else if (result.status == Status::FAILED)
+          handle_event(j, Event::DETECTION_FAIL);
+        else if (result.status == Status::PARSING)
+          handle_event(j, Event::PARSE_OK);
+        else if (result.status == Status::DONE)
+          std::cout << "[QM] Job " << j.id << " is fully DONE\n";
+      }
+    }
   }
+}
 
-  if (job.status == file_job::STATUS::DONE)
-    file_queue.pop_front();
+void qm::handle_event(file_job &job, Event ev) {
+  if (sm.apply(job, ev)) {
+    send_to_worker(job);
+  }
+}
+
+void qm::send_to_worker(const file_job &job) {
+  if (job.type == JobType::DETECTOR) {
+    ipc.send_job(job);
+    std::cout << "[QM] Sent job " << job.id << " to DETECTOR\n";
+  } else if (job.type == JobType::PARSER) {
+    ipc.send_job(job);
+    std::cout << "[QM] Sent job " << job.id << " to PARSER\n";
+  }
 }
 
 void qm::scan_new_files() {
-  std::filesystem::path root = "/home/samuil/Projects/fika/tmp/var/spool/fika/new";
+  std::filesystem::path root =
+      "/home/samuil/Projects/fika/tmp/var/spool/fika/new";
   for (const auto &f : std::filesystem::directory_iterator(root)) {
     if (std::filesystem::is_regular_file(f)) {
       file_job fjob;
       fjob.id =
           "somerandomid"; // TODO (samuil) a id generator should be implemented
       fjob.path = f.path().string();
-      fjob.status = file_job::STATUS::NEW;
-      file_queue.push_back(fjob);
+      add_job(fjob);
     }
   }
 }

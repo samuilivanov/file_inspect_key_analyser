@@ -14,32 +14,25 @@
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef QM_H_INCLUDE
-#define QM_H_INCLUDE
-
+#ifndef QIPC_H
+#define QIPC_H
 #include "file_job.h"
-#include "qipc.h"
-#include "state_machine.h"
-#include <vector>
-
+#include <boost/interprocess/ipc/message_queue.hpp>
+#include <memory>
 namespace fika {
 
-class qm {
-
+class qipc {
 public:
-  void setup();
-  void add_job(file_job job); // register new jobs
-  void process_results();     // poll results from workers
-  void handle_event(file_job &job, Event ev);
+  qipc(/* args */);
+  ~qipc();
+  void send_job(const file_job &job);
+  bool try_receive_result(file_job &job);
 
 private:
-  qipc ipc;
-  state_machine sm;
-  std::vector<file_job> jobs_in_memory;
-
-  void send_to_worker(const file_job &job);
-  void scan_new_files();
+  std::unique_ptr<boost::interprocess::message_queue> mq_detector;
+  std::unique_ptr<boost::interprocess::message_queue> mq_result;
 };
+
 } // namespace fika
 
 #endif
