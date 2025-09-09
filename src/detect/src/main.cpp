@@ -14,23 +14,31 @@
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "file_job.h"
+#include "ipc_client.h"
 #include "msg.h"
 #include <detector.h>
 #include <iostream>
 
 int main(int argc, char const *argv[]) {
-  if (argc < 2) {
-
-    std::cerr << "Usage: detect <file1> [file2 ...]\n";
-    return 1;
-  }
   msg_logger::msg_logger_init("detect.log");
-  fika::detect::detector d;
-  for (int i = 1; i < argc; ++i) {
-    auto result = d.detect_file(argv[i]);
-    msg_logger::log_info("Detect file: {}: {}", argv[i], result.mime_type);
-    std::cout << argv[i] << ": " << result.mime_type << " (" << result.source
-              << ")\n";
+  fika::ipc_client ipc("job_queue_detector");
+
+  while (true) {
+    fika::file_job_shm job{};
+    if (ipc.receive_job(job)) {
+      msg_logger::log_info("processing job {}", job.id);
+      fika::detect::detector d;
+      auto result = d.detect_file(job.path);
+      msg_logger::log_info("Detect file: {}: {}", job.path, result.mime_type);
+      if (result.mime_type != "application/octet-stream") {
+        job.status = fika::Status::PARSING;
+      } else {
+        job.status = fika::Status::FAILED;
+      }
+      ipc.send_result(job);
+    }
   }
+
   return 0;
 }

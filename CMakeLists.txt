@@ -26,7 +26,8 @@ include(FetchContent)
 
 find_package(Boost REQUIRED COMPONENTS log thread system)
 
-add_subdirectory(src/fika) 
+add_subdirectory(src/fika)
+add_subdirectory(src/global) 
 add_subdirectory(src/util)
 add_subdirectory(src/detect)
 add_subdirectory(src/qm)
