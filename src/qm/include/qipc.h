@@ -26,7 +26,7 @@ public:
   qipc(/* args */);
   ~qipc();
   void send_job(const file_job_shm &job);
-  bool try_receive_result(file_job_shm &job);
+  void receive_result(file_job_shm &job);
 
 private:
   std::unique_ptr<boost::interprocess::message_queue> mq_detector;

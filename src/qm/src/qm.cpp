@@ -16,13 +16,15 @@
 
 #include "qm.h"
 #include "msg.h"
+#include <algorithm>
 #include <array>
 #include <filesystem>
 
 namespace fika {
 void qm::setup() {
   std::filesystem::path root = "/home/samuil/Projects/fika/tmp/var/spool/fika";
-  std::array<std::string, 4> subdirs{"new", "processing", "done", "failed"};
+  std::array<std::string, 5> subdirs{"incomming", "new", "processing", "done",
+                                     "failed"};
   for (const auto &d : subdirs) {
     std::filesystem::path dir = root / d;
     if (std::filesystem::create_directories(dir)) {
@@ -43,19 +45,34 @@ void qm::add_job(file_job job) {
 
 void qm::process_results() {
   file_job_shm result;
-  while (ipc.try_receive_result(result)) {
-    for (auto &j : jobs_in_memory) {
-      if (j.id == result.id) {
-        // Map result status -> FSM event
-        if (result.status == Status::DETECTING)
-          handle_event(j, Event::DETECTION_OK);
-        else if (result.status == Status::FAILED)
-          handle_event(j, Event::DETECTION_FAIL);
-        else if (result.status == Status::PARSING)
-          handle_event(j, Event::PARSE_OK);
-        else if (result.status == Status::DONE)
-          msg_logger::log_info("Job {} is fully DONE", j.id);
-      }
+  while (true) {
+    ipc.receive_result(result);
+    // Add job if missing
+    auto it =
+        std::find_if(jobs_in_memory.begin(), jobs_in_memory.end(),
+                     [&](const file_job &j) { return j.id == result.id; });
+
+    if (it == jobs_in_memory.end()) {
+      add_job(result.to_file_job());
+      it = std::prev(jobs_in_memory.end());
+    }
+
+    // FSM event mapping
+    switch (result.status) {
+    case Status::DETECTING:
+      handle_event(*it, Event::DETECTION_OK);
+      break;
+    case Status::FAILED:
+      handle_event(*it, Event::DETECTION_FAIL);
+      break;
+    case Status::PARSING:
+      handle_event(*it, Event::PARSE_OK);
+      break;
+    case Status::DONE:
+      msg_logger::log_info("Job {} is fully DONE", it->id);
+      break;
+    default:
+      break;
     }
   }
 }

@@ -33,16 +33,6 @@ int main(int argc, char const *argv[]) {
     }
   });
 
-  // Add sample jobs
-  for (int i = 0; i < 2; ++i) {
-    fika::file_job job{};
-    std::string id = "job_" + std::to_string(i + 1);
-    job.id = id;
-    job.path = "/home/samuil/Project/fika/tmp/var/spool/fika/new/file_" +
-               std::to_string(i + 1) + ".txt";
-    qm.add_job(job);
-  }
-
   result_thread.join();
   return 0;
 }

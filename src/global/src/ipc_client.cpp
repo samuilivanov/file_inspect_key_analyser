@@ -25,10 +25,16 @@ ipc_client::ipc_client(const std::string &qname) {
       boost::interprocess::open_only, "result_queue");
 }
 
-bool ipc_client::receive_job(file_job_shm &job) {
+bool ipc_client::try_receive_job(file_job_shm &job) {
   size_t recv_size;
   unsigned int priority;
   return mq->try_receive(&job, sizeof(job), recv_size, priority);
+}
+
+void ipc_client::receive_job(file_job_shm &job) {
+  size_t recv_size;
+  unsigned int priority;
+  mq->receive(&job, sizeof(job), recv_size, priority);
 }
 
 void ipc_client::send_result(const file_job_shm &job) {

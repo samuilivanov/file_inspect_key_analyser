@@ -44,9 +44,9 @@ void qipc::send_job(const file_job_shm &job) {
     break;
   }
 }
-bool qipc::try_receive_result(file_job_shm &job) {
+void qipc::receive_result(file_job_shm &job) {
   size_t recv_size;
   unsigned int priority;
-  return mq_result->try_receive(&job, sizeof(job), recv_size, priority);
+  mq_result->receive(&job, sizeof(job), recv_size, priority);
 }
 } // namespace fika

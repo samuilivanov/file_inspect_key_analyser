@@ -26,7 +26,8 @@ namespace fika {
 class ipc_client {
 public:
   ipc_client(const std::string &qname);
-  bool receive_job(file_job_shm &job);
+  bool try_receive_job(file_job_shm &job);
+  void receive_job(file_job_shm &job);
   void send_result(const file_job_shm &job);
 
 private:
