@@ -35,14 +35,14 @@ void qm::setup() {
 void qm::add_job(file_job job) {
   job.status = Status::NEW;
   jobs_in_memory.push_back(job);
-  std::cout << "[QM] Registered job " << job.id << "\n";
+  msg_logger::log_info("Registed job {}", job.id);
 
   // Submit event drives the FSM
   handle_event(jobs_in_memory.back(), Event::SUBMIT);
 }
 
 void qm::process_results() {
-  file_job result;
+  file_job_shm result;
   while (ipc.try_receive_result(result)) {
     for (auto &j : jobs_in_memory) {
       if (j.id == result.id) {
@@ -54,7 +54,7 @@ void qm::process_results() {
         else if (result.status == Status::PARSING)
           handle_event(j, Event::PARSE_OK);
         else if (result.status == Status::DONE)
-          std::cout << "[QM] Job " << j.id << " is fully DONE\n";
+          msg_logger::log_info("Job {} is fully DONE", j.id);
       }
     }
   }
@@ -67,12 +67,14 @@ void qm::handle_event(file_job &job, Event ev) {
 }
 
 void qm::send_to_worker(const file_job &job) {
+  file_job_shm jobs{};
+  jobs.from_file_job(job);
   if (job.type == JobType::DETECTOR) {
-    ipc.send_job(job);
-    std::cout << "[QM] Sent job " << job.id << " to DETECTOR\n";
+    ipc.send_job(jobs);
+    msg_logger::log_info("Sent job {} to detectd", job.id);
   } else if (job.type == JobType::PARSER) {
-    ipc.send_job(job);
-    std::cout << "[QM] Sent job " << job.id << " to PARSER\n";
+    ipc.send_job(jobs);
+    msg_logger::log_info("Sent job {} to parsed", job.id);
   }
 }
 

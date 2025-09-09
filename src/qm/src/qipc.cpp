@@ -23,9 +23,10 @@ qipc::qipc(/* args */) {
 
   mq_detector = std::make_unique<boost::interprocess::message_queue>(
       boost::interprocess::create_only, "job_queue_detector", 100,
-      sizeof(file_job));
+      sizeof(file_job_shm));
   mq_result = std::make_unique<boost::interprocess::message_queue>(
-      boost::interprocess::create_only, "result_queue", 100, sizeof(file_job));
+      boost::interprocess::create_only, "result_queue", 100,
+      sizeof(file_job_shm));
 }
 
 qipc::~qipc() {
@@ -33,7 +34,7 @@ qipc::~qipc() {
   boost::interprocess::message_queue::remove("result_queue");
 }
 
-void qipc::send_job(const file_job &job) {
+void qipc::send_job(const file_job_shm &job) {
   switch (job.type) {
   case JobType::DETECTOR:
     mq_detector->send(&job, sizeof(job), 0);
@@ -43,7 +44,7 @@ void qipc::send_job(const file_job &job) {
     break;
   }
 }
-bool qipc::try_receive_result(file_job &job) {
+bool qipc::try_receive_result(file_job_shm &job) {
   size_t recv_size;
   unsigned int priority;
   return mq_result->try_receive(&job, sizeof(job), recv_size, priority);

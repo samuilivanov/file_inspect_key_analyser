@@ -14,11 +14,14 @@
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "msg.h"
 #include "qm.h"
 #include <file_job.h>
 #include <thread>
 
 int main(int argc, char const *argv[]) {
+  msg_logger::msg_logger_init("qm.log");
+
   fika::qm qm;
   qm.setup();
 
@@ -32,7 +35,7 @@ int main(int argc, char const *argv[]) {
 
   // Add sample jobs
   for (int i = 0; i < 2; ++i) {
-    fika::file_job job;
+    fika::file_job job{};
     std::string id = "job_" + std::to_string(i + 1);
     job.id = id;
     job.path = "/home/samuil/Project/fika/tmp/var/spool/fika/new/file_" +
