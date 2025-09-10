@@ -32,7 +32,7 @@
 #include <memory>
 #include <source_location>
 #include <string>
-namespace msg_logger {
+namespace fika::log {
 
 namespace logging = boost::log;
 namespace sinks = boost::log::sinks;
@@ -111,5 +111,5 @@ template <typename... Ts> struct log_critical {
 template <typename... Ts>
 log_critical(const std::string &, Ts &&...) -> log_critical<Ts...>;
 
-} // namespace msg_logger
+} // namespace fika::log
 #endif

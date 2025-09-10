@@ -20,13 +20,14 @@
 #include <thread>
 
 int main(int argc, char const *argv[]) {
-  msg_logger::msg_logger_init("qm.log");
+  fika::log::msg_logger_init("qm.log");
 
   fika::qm qm;
   qm.setup();
 
   // Start results polling
   std::thread result_thread([&qm] {
+    fika::log::log_info("QueueManager result-fetcher thread started");
     while (true) {
       qm.process_results();
       std::this_thread::sleep_for(std::chrono::milliseconds(100));

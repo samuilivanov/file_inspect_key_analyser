@@ -22,13 +22,14 @@
 
 namespace fika {
 void qm::setup() {
+  // TODO (samuil) redesign this setup function
   std::filesystem::path root = "/home/samuil/Projects/fika/tmp/var/spool/fika";
   std::array<std::string, 5> subdirs{"incomming", "new", "processing", "done",
                                      "failed"};
   for (const auto &d : subdirs) {
     std::filesystem::path dir = root / d;
     if (std::filesystem::create_directories(dir)) {
-      msg_logger::log_info(std::string("created dir: ") + dir.string());
+      log::log_info(std::string("created dir: ") + dir.string());
     }
   }
   scan_new_files();
@@ -37,7 +38,7 @@ void qm::setup() {
 void qm::add_job(file_job job) {
   job.status = Status::NEW;
   jobs_in_memory.push_back(job);
-  msg_logger::log_info("Registed job {}", job.id);
+  log::log_info("Registed job {}", job.id);
 
   // Submit event drives the FSM
   handle_event(jobs_in_memory.back(), Event::SUBMIT);
@@ -71,7 +72,7 @@ void qm::process_results() {
       handle_event(*it, Event::PARSE_OK);
       break;
     case Status::DONE:
-      msg_logger::log_info("Job {} is fully DONE", it->id);
+      log::log_info("Job {} is fully DONE", it->id);
       break;
     default:
       break;
@@ -88,12 +89,15 @@ void qm::handle_event(file_job &job, Event ev) {
 void qm::send_to_worker(const file_job &job) {
   file_job_shm jobs{};
   jobs.from_file_job(job);
+  // TODO (samuil) this can be a map with the different services that gets the
+  // string and in the log just put that instead of having if else just for the
+  // log to be different
   if (job.type == JobType::DETECTOR) {
     ipc.send_job(jobs);
-    msg_logger::log_info("Sent job {} to detectd", job.id);
+    log::log_info("Sent job {} to detectd", job.id);
   } else if (job.type == JobType::PARSER) {
     ipc.send_job(jobs);
-    msg_logger::log_info("Sent job {} to parsed", job.id);
+    log::log_info("Sent job {} to parsed", job.id);
   }
 }
 

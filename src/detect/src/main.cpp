@@ -37,18 +37,18 @@ inline fika::MimeType mime_string_to_enum(const std::string &mimeStr) {
 } // namespace
 
 int main(int argc, char const *argv[]) {
-  msg_logger::msg_logger_init("detect.log");
+  fika::log::msg_logger_init("detect.log");
   fika::ipc_client ipc("job_queue_detector");
 
   // TODO (samuil) in general this logic can be moved to a separete class
   while (true) {
     fika::file_job_shm job{};
     ipc.receive_job(job);
-    msg_logger::log_info("processing job {}", job.id);
+    fika::log::log_info("processing job {}", job.id);
     fika::detect::detector d;
     auto result = d.detect_file(job.path);
     job.mime = mime_string_to_enum(result.mime_type);
-    msg_logger::log_info("Detect file: {}: {}", job.path, result.mime_type);
+    fika::log::log_info("Detect file: {}: {}", job.path, result.mime_type);
     if (result.mime_type != "application/octet-stream") {
       job.status = fika::Status::DETECTING;
     } else {

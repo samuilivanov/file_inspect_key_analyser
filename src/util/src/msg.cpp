@@ -21,7 +21,7 @@
 #include <spdlog/spdlog.h>
 #include <string>
 
-namespace msg_logger {
+namespace fika::log {
 void msg_logger_init(const std::string &log_file) {
   static std::once_flag flag;
   std::call_once(flag, [log_file] {
@@ -73,4 +73,4 @@ void msg_logger_init(const std::string &log_file) {
   });
 }
 
-} // namespace msg_logger
+} // namespace fika::log

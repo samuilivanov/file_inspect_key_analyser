@@ -19,9 +19,9 @@
 #include "msg.h"
 
 TEST_CASE("bip39_ctx initializes and sets entropy") {
-  msg_logger::msg_logger_init("test_logs.log");
+  fika::log::msg_logger_init("test_logs.log");
   // Basic messages
-  msg_logger::log_info("This is an info message");
+  fika::log::log_info("This is an info message");
   //   msg_debug("Debug value: x={}", 42);
   //   msg_error("An error occurred: code={}", -1);
 }
