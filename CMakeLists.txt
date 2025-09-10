@@ -39,6 +39,8 @@ add_subdirectory(src/util)
 add_subdirectory(src/detect)
 add_subdirectory(src/qm)
 add_subdirectory(src/ingestd)
+add_subdirectory(src/supervisor)
+add_subdirectory(src/parse)
 
 if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR MODERN_CMAKE_BUILD_TESTING)
    AND BUILD_TESTING)

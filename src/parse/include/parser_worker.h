@@ -14,24 +14,28 @@
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef QIPC_H
-#define QIPC_H
-#include "file_job.h"
-#include <boost/interprocess/ipc/message_queue.hpp>
-#include <memory>
-namespace fika {
+#ifndef PERSER_WORKER_H
+#define PERSER_WORKER_H
 
-class qipc {
+#include "ipc_client.h"
+#include "parser_registry.h"
+#include <atomic>
+
+namespace fika {
+class parser_worker {
 public:
-  qipc(/* args */);
-  ~qipc();
-  void send_job(const file_job_shm &job);
-  void receive_result(file_job_shm &job);
+  parser_worker(std::shared_ptr<ipc_client> client,
+                std::shared_ptr<std::atomic<bool>> running,
+                std::shared_ptr<parser_registry> registry);
+
+  void operator()();
 
 private:
-  std::unique_ptr<boost::interprocess::message_queue> mq_detector;
-  std::unique_ptr<boost::interprocess::message_queue> mq_parse;
-  std::unique_ptr<boost::interprocess::message_queue> mq_result;
+  std::shared_ptr<ipc_client> client_;
+  std::shared_ptr<std::atomic<bool>> running_;
+  std::shared_ptr<parser_registry> registry_;
+
+  void process_job(file_job_shm &job);
 };
 
 } // namespace fika

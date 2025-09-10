@@ -60,6 +60,8 @@ void qm::process_results() {
     // FSM event mapping
     switch (result.status) {
     case Status::DETECTING:
+      it->mime = result.mime; // TODO (samuil) the in memory object should be
+                              // updated not thsi bullshit
       handle_event(*it, Event::DETECTION_OK);
       break;
     case Status::FAILED:

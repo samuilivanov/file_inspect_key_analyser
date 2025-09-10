@@ -19,10 +19,14 @@
 namespace fika {
 qipc::qipc(/* args */) {
   boost::interprocess::message_queue::remove("job_queue_detector");
+  boost::interprocess::message_queue::remove("job_queue_parse");
   boost::interprocess::message_queue::remove("result_queue");
 
   mq_detector = std::make_unique<boost::interprocess::message_queue>(
       boost::interprocess::create_only, "job_queue_detector", 100,
+      sizeof(file_job_shm));
+  mq_parse = std::make_unique<boost::interprocess::message_queue>(
+      boost::interprocess::create_only, "job_queue_parse", 100,
       sizeof(file_job_shm));
   mq_result = std::make_unique<boost::interprocess::message_queue>(
       boost::interprocess::create_only, "result_queue", 100,
@@ -31,6 +35,7 @@ qipc::qipc(/* args */) {
 
 qipc::~qipc() {
   boost::interprocess::message_queue::remove("log_queue_detector");
+  boost::interprocess::message_queue::remove("job_queue_parse");
   boost::interprocess::message_queue::remove("result_queue");
 }
 
@@ -39,6 +44,8 @@ void qipc::send_job(const file_job_shm &job) {
   case JobType::DETECTOR:
     mq_detector->send(&job, sizeof(job), 0);
     break;
+  case JobType::PARSER:
+    mq_parse->send(&job, sizeof(job), 0);
 
   default:
     break;

@@ -20,7 +20,7 @@ namespace fika {
 
 ipc_client::ipc_client(const std::string &qname) {
   mq = std::make_unique<boost::interprocess::message_queue>(
-      boost::interprocess::open_only, "job_queue_detector");
+      boost::interprocess::open_only, qname.c_str());
   mq_results = std::make_unique<boost::interprocess::message_queue>(
       boost::interprocess::open_only, "result_queue");
 }

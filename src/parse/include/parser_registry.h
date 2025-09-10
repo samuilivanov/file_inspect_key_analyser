@@ -14,26 +14,27 @@
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef QIPC_H
-#define QIPC_H
-#include "file_job.h"
-#include <boost/interprocess/ipc/message_queue.hpp>
-#include <memory>
-namespace fika {
+#ifndef PARSER_REGISTRY_H
+#define PARSER_REGISTRY_H
 
-class qipc {
+#include "parser.h"
+#include <unordered_map>
+
+namespace fika {
+class parser_registry {
 public:
-  qipc(/* args */);
-  ~qipc();
-  void send_job(const file_job_shm &job);
-  void receive_result(file_job_shm &job);
+  parser_registry() = default;
+
+  parser_registry(const parser_registry &) = delete;
+  parser_registry &operator=(const parser_registry &) = delete;
+
+  parser *find_parser(MimeType mimeType); // use int
 
 private:
-  std::unique_ptr<boost::interprocess::message_queue> mq_detector;
-  std::unique_ptr<boost::interprocess::message_queue> mq_parse;
-  std::unique_ptr<boost::interprocess::message_queue> mq_result;
-};
+  std::unordered_map<MimeType, std::unique_ptr<parser>> parsers_;
 
+  std::unique_ptr<parser> create_parser(MimeType mimeType) const;
+};
 } // namespace fika
 
 #endif
