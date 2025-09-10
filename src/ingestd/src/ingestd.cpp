@@ -23,6 +23,7 @@
 #include <httplib.h>
 #include <iostream>
 
+// TODO (samuil) move this to util
 namespace {
 void generate_unique_id(char id[64]) {
   // Timestamp in milliseconds
@@ -51,12 +52,7 @@ ingestd::ingestd(const std::string &spool_dir)
 void ingestd::handle_file(const std::string &tmp_path,
                           const std::string &filename) {
   std::filesystem::path dst = std::filesystem::path(spool_dir_) / filename;
-  try {
-    std::filesystem::rename(tmp_path, dst);
-
-  } catch (...) {
-    std::cout << "error";
-  }
+  std::filesystem::rename(tmp_path, dst);
 
   file_job_shm job{};
   generate_unique_id(job.id);
@@ -66,6 +62,7 @@ void ingestd::handle_file(const std::string &tmp_path,
 }
 
 void ingestd::run() {
+  // TODO (samuil) httplib should be replaced with boost beast
   httplib::Server svr;
 
   svr.Post(

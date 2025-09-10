@@ -1,0 +1,17 @@
+[
+  {
+    "name": "ingestd",
+    "path": "/home/samuil/Projects/fika/build/src/ingestd/ingestd",
+    "args": []
+  },
+  {
+    "name": "qm",
+    "path": "/home/samuil/Projects/fika/build/src/qm/qm",
+    "args": []
+  },
+  {
+    "name": "detect",
+    "path": "/home/samuil/Projects/fika/build/src/detect/detect",
+    "args": []
+  }
+]
