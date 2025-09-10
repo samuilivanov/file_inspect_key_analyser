@@ -10,3 +10,7 @@ target_compile_features(parse PRIVATE cxx_std_23)
 target_link_libraries(parse PRIVATE global magic util fmt Boost::boost Boost::log
     Boost::thread
     Boost::system)
+
+install(TARGETS parse
+    RUNTIME DESTINATION ${FIKA_BINDIR}
+)

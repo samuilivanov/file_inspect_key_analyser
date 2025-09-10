@@ -1,0 +1,22 @@
+[
+  {
+    "name": "qm",
+    "path": "@CMAKE_BINARY_DIR@/bin/qm",
+    "args": []
+  },
+  {
+    "name": "ingestd",
+    "path": "@CMAKE_BINARY_DIR@/bin/ingestd",
+    "args": []
+  },
+  {
+    "name": "detect",
+    "path": "@CMAKE_BINARY_DIR@/bin/detect",
+    "args": []
+  },
+  {
+    "name": "parse",
+    "path": "@CMAKE_BINARY_DIR@/bin/parse",
+    "args": []
+  }
+]

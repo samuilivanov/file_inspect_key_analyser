@@ -15,6 +15,7 @@
  */
 
 #include "supervisor.h"
+#include "config.h"
 #include "config_loader.hpp"
 #include "worker_configs.h"
 #include <boost/asio.hpp>
@@ -22,8 +23,7 @@
 namespace fika {
 
 supervisor::supervisor() {
-  auto configs = config::load<worker_configs>(
-      "/home/samuil/Projects/fika/conf/supervisor.json");
+  auto configs = config::load<worker_configs>(SUPERVISOR_CONF.data());
 
   for (auto &cfg : configs.workers) {
     workers_.push_back(std::make_unique<worker>(cfg.path, cfg.args));

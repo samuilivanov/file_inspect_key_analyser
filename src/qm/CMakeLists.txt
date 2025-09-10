@@ -8,3 +8,7 @@ target_compile_features(qm PRIVATE cxx_std_23)
 target_link_libraries(qm PRIVATE magic util fmt Boost::boost Boost::log
     Boost::thread
     Boost::system)
+
+install(TARGETS qm
+    RUNTIME DESTINATION ${FIKA_BINDIR}
+)

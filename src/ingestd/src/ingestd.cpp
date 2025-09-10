@@ -15,7 +15,9 @@
  */
 
 #include "ingestd.h"
+#include "config.h"
 #include "file_job.h"
+#include "msg.h"
 #include <chrono>
 #include <cstring>
 #include <filesystem>
@@ -45,9 +47,9 @@ void generate_unique_id(char id[64]) {
 
 namespace fika {
 
-ingestd::ingestd(const std::string &spool_dir)
-    : spool_dir_(spool_dir), mq_(boost::interprocess::open_or_create,
-                                 "result_queue", 100, sizeof(file_job_shm)) {}
+ingestd::ingestd(std::string_view spool_dir)
+    : spool_dir_(spool_dir),
+      mq_(boost::interprocess::open_only, "result_queue") {}
 
 void ingestd::handle_file(const std::string &tmp_path,
                           const std::string &filename) {
@@ -57,8 +59,10 @@ void ingestd::handle_file(const std::string &tmp_path,
   file_job_shm job{};
   generate_unique_id(job.id);
   std::strncpy(job.path, dst.c_str(), sizeof(job.path) - 1);
+  log::log_info("File job created with id: {}", job.id);
 
   mq_.send(&job, sizeof(job), 0);
+  log::log_info("File job {} send for processing", job.id);
 }
 
 void ingestd::run() {
@@ -67,6 +71,7 @@ void ingestd::run() {
 
   svr.Post(
       "/upload", [this](const httplib::Request &req, httplib::Response &res) {
+        log::log_debug("Accepting file!");
         // Read raw body as file content
         const auto &body = req.body;
         if (body.empty()) {
@@ -79,19 +84,19 @@ void ingestd::run() {
         std::string filename =
             "upload_" + std::to_string(std::chrono::system_clock::to_time_t(
                             std::chrono::system_clock::now()));
-        std::filesystem::path tmp =
-            "/home/samuil/Projects/fika/tmp/var/spool/fika/incomming";
+        std::filesystem::path tmp = FIKA_SPOOL_INCOMMING_DIR;
         tmp /= filename;
         std::ofstream ofs(tmp, std::ios::binary);
         ofs.write(body.data(), body.size());
         ofs.close();
+        log::log_info("file written to incomming: {}", filename);
 
         handle_file(tmp.string(), filename);
 
         res.set_content("Job submitted\n", "text/plain");
       });
 
-  std::cout << "ingestd HTTP server running on port 8080\n";
+  log::log_debug("ingestd HTTP server running on port 8080");
   svr.listen("0.0.0.0", 8080);
 }
 

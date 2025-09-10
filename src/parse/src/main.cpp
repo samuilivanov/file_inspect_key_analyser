@@ -13,9 +13,10 @@
  * You should have received a copy of the GNU General Public License
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include "msg.h"
 #include "parser_service.h"
-
 int main() {
+
   fika::parser_service service("job_queue_parse");
   service.run();
   return 0;

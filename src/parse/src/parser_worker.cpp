@@ -15,6 +15,7 @@
  */
 
 #include "parser_worker.h"
+#include "msg.h"
 #include <iostream>
 
 namespace fika {
@@ -28,6 +29,7 @@ void parser_worker::operator()() {
   file_job_shm job;
   while (running_->load()) {
     client_->receive_job(job);
+    log::log_info("receive job id: {}", job.id);
     process_job(job);
     client_->send_result(job);
   }

@@ -15,6 +15,7 @@
  */
 
 #include "qm.h"
+#include "config.h"
 #include "msg.h"
 #include <algorithm>
 #include <array>
@@ -23,7 +24,8 @@
 namespace fika {
 void qm::setup() {
   // TODO (samuil) redesign this setup function
-  std::filesystem::path root = "/home/samuil/Projects/fika/tmp/var/spool/fika";
+  std::filesystem::path root = FIKA_SPOOL_DIR.data();
+  log::log_debug("Setup starting using path: {}", root.string());
   std::array<std::string, 5> subdirs{"incomming", "new", "processing", "done",
                                      "failed"};
   for (const auto &d : subdirs) {
@@ -102,8 +104,9 @@ void qm::send_to_worker(const file_job &job) {
 }
 
 void qm::scan_new_files() {
-  std::filesystem::path root =
-      "/home/samuil/Projects/fika/tmp/var/spool/fika/new";
+  std::filesystem::path root = FIKA_SPOOL_NEW_DIR;
+  log::log_debug("Scan for file in new using path: {}", root.string());
+
   for (const auto &f : std::filesystem::directory_iterator(root)) {
     if (std::filesystem::is_regular_file(f)) {
       file_job fjob;

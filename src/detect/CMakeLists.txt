@@ -6,5 +6,9 @@ target_include_directories(detect PUBLIC include)
 target_compile_features(detect PRIVATE cxx_std_23)
 
 target_link_libraries(detect PRIVATE global magic util fmt Boost::boost Boost::log
-    Boost::thread
-    Boost::system)
+Boost::thread
+Boost::system)
+
+install(TARGETS detect
+        RUNTIME DESTINATION ${FIKA_BINDIR}
+)

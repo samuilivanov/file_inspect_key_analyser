@@ -14,9 +14,11 @@
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "config.h"
+#include "filesystem"
 #include "ingestd.h"
 int main(int argc, char const *argv[]) {
-  fika::ingestd ingest("/home/samuil/Projects/fika/tmp/var/spool/fika/new");
+  fika::ingestd ingest(FIKA_SPOOL_NEW_DIR);
   ingest.run();
   return 0;
 }

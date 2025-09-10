@@ -8,3 +8,6 @@ target_compile_features(ingestd PRIVATE cxx_std_23)
 target_link_libraries(ingestd PRIVATE magic util fmt Boost::boost Boost::log
     Boost::thread
     Boost::system)
+install(TARGETS ingestd
+        RUNTIME DESTINATION ${FIKA_BINDIR}
+)

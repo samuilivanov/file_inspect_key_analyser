@@ -33,6 +33,38 @@ FetchContent_MakeAvailable(httplib)
 
 find_package(Boost REQUIRED COMPONENTS log thread system)
 
+# Install locations (can be overridden via -D option)
+set(FIKA_BINDIR "${CMAKE_INSTALL_PREFIX}/bin" CACHE PATH "Directory for binaries")
+set(FIKA_LIBDIR "${CMAKE_INSTALL_PREFIX}/lib" CACHE PATH "Directory for libraries")
+set(FIKA_DATADIR "${CMAKE_BINARY_DIR}/conf" CACHE PATH "Directory for config/data files" FORCE)
+set(FIKA_SPOOL_DIR "${CMAKE_BINARY_DIR}/spool/fika")
+file(MAKE_DIRECTORY ${FIKA_SPOOL_DIR})
+
+configure_file(
+    ${CMAKE_SOURCE_DIR}/cmake/config.h.in
+    ${CMAKE_BINARY_DIR}/config.h
+)
+include_directories(${CMAKE_BINARY_DIR})
+
+# Create local conf folder in build folder
+set(FIKA_CONF_DIR "${CMAKE_BINARY_DIR}/conf")
+file(MAKE_DIRECTORY ${FIKA_CONF_DIR})
+
+# Generate JSON config from template
+configure_file(
+    ${CMAKE_SOURCE_DIR}/cmake/supervisor.json.in
+    ${FIKA_CONF_DIR}/supervisor.json
+    @ONLY
+)
+# Where executables go after build
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+# Where shared libraries go after build
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+
+# Where static libraries go
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+
 add_subdirectory(src/fika)
 add_subdirectory(src/global) 
 add_subdirectory(src/util)

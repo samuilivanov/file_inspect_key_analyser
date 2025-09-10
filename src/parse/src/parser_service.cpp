@@ -15,8 +15,8 @@
  */
 
 #include "parser_service.h"
+#include "msg.h"
 #include <boost/asio/post.hpp>
-
 namespace fika {
 
 parser_service::parser_service(const std::string &inputQueue,
@@ -27,6 +27,7 @@ parser_service::parser_service(const std::string &inputQueue,
       workerCount_(workerCount) {}
 
 void parser_service::run() {
+  log::log_info("Parser service starting!");
   running_->store(true);
 
   // Create thread pool with specified worker count
@@ -34,12 +35,16 @@ void parser_service::run() {
 
   // Post workers
   for (std::size_t i = 0; i < workerCount_; ++i) {
+    log::log_info("Parser workers starting!");
+
     boost::asio::post(
         *pool_, [client = client_, running = running_, registry = registry_] {
           parser_worker worker(client, running, registry);
           worker();
         });
   }
+  log::log_info("Parser workers started!");
+  log::log_info("Parser service started!");
 
   // Wait for all threads
   pool_->join();
