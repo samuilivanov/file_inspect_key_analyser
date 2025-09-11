@@ -34,7 +34,7 @@ void qm::setup() {
       log::log_info(std::string("created dir: ") + dir.string());
     }
   }
-  scan_new_files();
+  // scan_new_files();
 }
 
 void qm::add_job(file_job job) {
@@ -47,7 +47,7 @@ void qm::add_job(file_job job) {
 }
 
 void qm::process_results() {
-  file_job_shm result;
+  file_job_shm result{};
   while (true) {
     ipc.receive_result(result);
     // Add job if missing

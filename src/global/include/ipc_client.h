@@ -18,7 +18,9 @@
 #define IPC_CLIENT_H
 #include "file_job.h"
 #include <boost/interprocess/ipc/message_queue.hpp>
+#include <chrono>
 #include <memory>
+#include <optional>
 #include <string>
 
 namespace fika {

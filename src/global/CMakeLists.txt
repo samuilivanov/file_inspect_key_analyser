@@ -7,7 +7,7 @@ add_library(global src/ipc_client.cpp ${HEADER_LIST})
 target_include_directories(global PUBLIC include .)
 
 # This depends on (header only) boost
-target_link_libraries(global PRIVATE Boost::boost Boost::log
+target_link_libraries(global PRIVATE util Boost::boost Boost::log
     Boost::thread
     Boost::system)
 

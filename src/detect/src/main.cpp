@@ -38,14 +38,14 @@ inline fika::MimeType mime_string_to_enum(const std::string &mimeStr) {
 
 int main(int argc, char const *argv[]) {
   fika::log::msg_logger_init("detect.log");
-  fika::ipc_client ipc("job_queue_detector");
 
-  // TODO (samuil) in general this logic can be moved to a separete class
+  fika::ipc_client ipc("job_queue_detector");
+  fika::detect::detector d;
+
   while (true) {
     fika::file_job_shm job{};
     ipc.receive_job(job);
     fika::log::log_info("processing job {}", job.id);
-    fika::detect::detector d;
     auto result = d.detect_file(job.path);
     job.mime = mime_string_to_enum(result.mime_type);
     fika::log::log_info("Detect file: {}: {}", job.path, result.mime_type);

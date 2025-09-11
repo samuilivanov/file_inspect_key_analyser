@@ -13,11 +13,47 @@
  * You should have received a copy of the GNU General Public License
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include "ipc_client.h"
 #include "msg.h"
+#include "parser_registry.h"
 #include "parser_service.h"
-int main() {
+#include <boost/asio/post.hpp>
+#include <thread>
 
-  fika::parser_service service("job_queue_parse");
-  service.run();
+namespace {
+fika::file_job_shm process_job(const fika::file_job_shm &job,
+                               fika::parser_registry &parsers) {
+  fika::file_job_shm j = job;
+  if (auto parser = parsers.find_parser(job.mime)) {
+    fika::log::log_info("in parsers");
+    j.status = fika::Status::DONE;
+  } else {
+    j.status = fika::Status::FAILED;
+  }
+  return j;
+}
+
+} // namespace
+
+int main() {
+  fika::log::msg_logger_init("parser.log");
+
+  fika::log::log_info("Starting parser service");
+
+  fika::ipc_client ipc("job_queue_parse");
+  boost::asio::thread_pool pool_{std::thread::hardware_concurrency()};
+
+  fika::parser_registry parsers;
+
+  while (true) {
+    fika::file_job_shm job;
+    ipc.receive_job(job);
+    fika::log::log_info("receive job id: {}", job.id);
+    boost::asio::post(pool_, [job_ = job, &parsers, &ipc] {
+      auto result = process_job(job_, parsers);
+      ipc.send_result(result);
+    });
+  }
+
   return 0;
 }
