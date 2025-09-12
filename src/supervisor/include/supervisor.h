@@ -24,14 +24,27 @@
 namespace fika {
 
 class supervisor {
+public:
+  using worker_factory_t = std::function<std::unique_ptr<worker>()>;
+
+  explicit supervisor(std::vector<worker_factory_t> factories);
+  void run();
+
+  template <typename Timer> void run_monitor_loop(Timer &timer) {
+    monitor_once();
+    timer.expires_after(std::chrono::seconds(1));
+    timer.async_wait([this, &timer](auto) { run_monitor_loop(timer); });
+  }
+  void start_workers();
+
+  const std::vector<std::unique_ptr<worker>> &get_workers() const {
+    return workers_;
+  }
+
+  void monitor_once();
+
 private:
   std::vector<std::unique_ptr<worker>> workers_;
-  void start_workers();
-  void monitor_workers();
-
-public:
-  supervisor(/* args */);
-  void run();
 };
 
 } // namespace fika

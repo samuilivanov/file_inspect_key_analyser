@@ -46,7 +46,7 @@ int main() {
   fika::parser_registry parsers;
 
   while (true) {
-    fika::file_job_shm job;
+    fika::file_job_shm job{};
     ipc.receive_job(job);
     fika::log::log_info("receive job id: {}", job.id);
     boost::asio::post(pool_, [job_ = job, &parsers, &ipc] {

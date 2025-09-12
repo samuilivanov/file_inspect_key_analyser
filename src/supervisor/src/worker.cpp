@@ -18,17 +18,19 @@
 
 namespace fika {
 
-worker::worker(std::string path, std::vector<std::string> args)
-    : path_(path), args_(args) {}
+worker::worker(process_factory_t factory) : factory_(std::move(factory)) {}
+
 void worker::start() {
-  process_ = std::make_unique<boost::process::child>(
-      path_, boost::process::args(args_));
+  process_ = factory_();
   last_heartbeat_ = std::chrono::steady_clock::now();
 }
 bool worker::is_alive() const { return process_ && process_->running(); }
+
 void worker::restart() {
-  if (process_ && process_->running())
+  if (process_ && process_->running()) {
     process_->terminate();
+    process_->wait();
+  }
   start();
 }
 

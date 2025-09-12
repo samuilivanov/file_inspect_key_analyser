@@ -34,7 +34,6 @@ inline T load(const std::string &filename, const std::string &json_key = "") {
   }
   nlohmann::json j;
   file >> j;
-  std::cout << "Loaded JSON:\n" << j.dump(4) << std::endl; // debug
   if (json_key.empty()) {
     return T::fromJson(j);
   } else {

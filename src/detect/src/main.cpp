@@ -17,12 +17,22 @@
 #include "file_job.h"
 #include "ipc_client.h"
 #include "msg.h"
+#include <csignal>
 #include <detector.h>
 #include <iostream>
+
+std::atomic<bool> stop_flag{false};
+
+// signal handler
 
 // TODO (samuil) this function should be moved to another location it will
 // become quite large inless something else if thought of
 namespace {
+void handle_signal(int signal) {
+  if (signal == SIGTERM || signal == SIGINT) {
+    stop_flag = true;
+  }
+}
 
 inline fika::MimeType mime_string_to_enum(const std::string &mimeStr) {
   if (mimeStr == "application/pdf")
@@ -38,11 +48,15 @@ inline fika::MimeType mime_string_to_enum(const std::string &mimeStr) {
 
 int main(int argc, char const *argv[]) {
   fika::log::msg_logger_init("detect.log");
+  fika::log::log_info("Starting detect service");
+
+  std::signal(SIGTERM, handle_signal);
+  std::signal(SIGINT, handle_signal);
 
   fika::ipc_client ipc("job_queue_detector");
   fika::detect::detector d;
 
-  while (true) {
+  while (!stop_flag) {
     fika::file_job_shm job{};
     ipc.receive_job(job);
     fika::log::log_info("processing job {}", job.id);
@@ -56,6 +70,8 @@ int main(int argc, char const *argv[]) {
     }
     ipc.send_result(job);
   }
+
+  fika::log::log_info("Stopping detect service");
 
   return 0;
 }

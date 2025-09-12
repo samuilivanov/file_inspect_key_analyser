@@ -17,18 +17,15 @@
 #include "supervisor.h"
 #include "config.h"
 #include "config_loader.hpp"
+#include "msg.h"
 #include "worker_configs.h"
 #include <boost/asio.hpp>
 
 namespace fika {
 
-supervisor::supervisor() {
-  auto configs = config::load<worker_configs>(SUPERVISOR_CONF.data());
-
-  for (auto &cfg : configs.workers) {
-    workers_.push_back(std::make_unique<worker>(cfg.path, cfg.args));
-    std::cout << "Loaded worker: " << cfg.name << " (" << cfg.path << ")\n";
-  }
+supervisor::supervisor(std::vector<worker_factory_t> factories) {
+  for (auto &f : factories)
+    workers_.push_back(f());
 }
 
 void supervisor::start_workers() {
@@ -37,27 +34,13 @@ void supervisor::start_workers() {
   }
 }
 
-void supervisor::monitor_workers() {
-  boost::asio::io_context io;
-  boost::asio::steady_timer timer(io, std::chrono::seconds(1));
-
-  timer.async_wait([this, &timer](auto) {
-    for (auto &w : workers_) {
-      if (!w->is_alive()) {
-        std::cout << "Restarting worker\n";
-        w->restart();
-      }
+void supervisor::monitor_once() {
+  for (auto &w : workers_) {
+    if (!w->is_alive()) {
+      log::log_info("Restarting worker");
+      w->restart();
     }
-    timer.expires_after(std::chrono::seconds(1));
-    timer.async_wait([this, &timer](auto) { monitor_workers(); });
-  });
-
-  io.run();
-}
-
-void supervisor::run() {
-  start_workers();
-  monitor_workers();
+  }
 }
 
 } // namespace fika
