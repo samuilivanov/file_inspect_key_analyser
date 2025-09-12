@@ -35,9 +35,27 @@ struct mock_child : public child_process {
   void wait() {}
 };
 
+struct mock_queue_manager : public ipc_queue_manager {
+  std::vector<std::string> removed{};
+  struct queue_info {
+    std::string name{};
+    size_t max{};
+    size_t size{};
+  };
+  std::vector<queue_info> created{};
+
+  void remove(const std::string &name) override { removed.push_back(name); }
+  void create(const std::string &name, std::size_t max_messages,
+              std::size_t message_size) override {
+    created.push_back({name, max_messages, message_size});
+  }
+};
+
 TEST_CASE("Supervisor creates workers correctly") {
 
   std::vector<mock_child *> mocks; // raw pointers for assertions
+  mock_queue_manager mock_mgr;
+  std::vector<queue_descriptor> queues = {{"q1", 10, 128}, {"q2", 20, 256}};
 
   // Each factory produces a worker that produces a mock_child
   auto worker_factory = [&mocks]() -> std::unique_ptr<worker> {
@@ -49,7 +67,9 @@ TEST_CASE("Supervisor creates workers correctly") {
         });
   };
 
-  supervisor sup({worker_factory, worker_factory}); // create 2 workers
+  supervisor sup(
+      {worker_factory, worker_factory}, queues,
+      std::make_shared<mock_queue_manager>(mock_mgr)); // create 2 workers
   CHECK(sup.get_workers().size() == 2);
   CHECK(mocks.empty()); // not started yet
 
@@ -62,7 +82,9 @@ TEST_CASE("Supervisor creates workers correctly") {
 TEST_CASE("Supervisor monitor_once restarts dead workers") {
 
   std::vector<mock_child *> mocks; // raw pointers for assertions
+  mock_queue_manager mock_mgr;
 
+  std::vector<queue_descriptor> queues = {{"q1", 10, 128}, {"q2", 20, 256}};
   // Each factory produces a worker that produces a mock_child
   auto worker_factory = [&mocks]() -> std::unique_ptr<worker> {
     return std::make_unique<worker>(
@@ -73,7 +95,8 @@ TEST_CASE("Supervisor monitor_once restarts dead workers") {
         });
   };
 
-  supervisor sup({worker_factory});
+  supervisor sup({worker_factory}, queues,
+                 std::make_shared<mock_queue_manager>(mock_mgr));
   sup.start_workers();
   CHECK(mocks.size() == 1);
 
@@ -90,7 +113,9 @@ TEST_CASE("Supervisor monitor_once restarts dead workers") {
 
 TEST_CASE("Supervisor multiple dead workers get restarted") {
   std::vector<mock_child *> mocks; // raw pointers for assertions
+  mock_queue_manager mock_mgr;
 
+  std::vector<queue_descriptor> queues = {{"q1", 10, 128}, {"q2", 20, 256}};
   // Each factory produces a worker that produces a mock_child
   auto worker_factory = [&mocks]() -> std::unique_ptr<worker> {
     return std::make_unique<worker>(
@@ -101,7 +126,8 @@ TEST_CASE("Supervisor multiple dead workers get restarted") {
         });
   };
 
-  supervisor sup({worker_factory, worker_factory, worker_factory});
+  supervisor sup({worker_factory, worker_factory, worker_factory}, queues,
+                 std::make_shared<mock_queue_manager>(mock_mgr));
   sup.start_workers();
   CHECK(mocks.size() == 3);
 
@@ -113,4 +139,27 @@ TEST_CASE("Supervisor multiple dead workers get restarted") {
   CHECK(mocks.size() == 5); // two new mocks created
   CHECK(mocks[3]->running());
   CHECK(mocks[4]->running());
+}
+
+TEST_CASE("Supervisor resets and creates queues") {
+  std::shared_ptr<mock_queue_manager> mock_mgr =
+      std::make_shared<mock_queue_manager>();
+
+  std::vector<queue_descriptor> queues = {{"q1", 10, 128}, {"q2", 20, 256}};
+
+  std::vector<supervisor::worker_factory_t> factories; // empty for this test
+
+  supervisor sup(factories, queues, mock_mgr);
+
+  sup.reset_queues();
+  CHECK(mock_mgr->removed.size() == 2);
+  CHECK(mock_mgr->removed[0] == "q1");
+  CHECK(mock_mgr->removed[1] == "q2");
+
+  sup.create_queues();
+  CHECK(mock_mgr->created.size() == 2);
+  CHECK(mock_mgr->created[0].name == "q1");
+  CHECK(mock_mgr->created[0].max == 10);
+  CHECK(mock_mgr->created[0].size == 128);
+  CHECK(mock_mgr->created[1].name == "q2");
 }

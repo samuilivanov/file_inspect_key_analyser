@@ -16,13 +16,24 @@
 
 #include "config.h"
 #include "config_loader.hpp"
+#include "file_job.h"
+#include "ipc_queue_manager.h"
 #include "msg.h"
+#include "queue_descriptor.h"
 #include "supervisor.h"
 #include "worker_configs.h"
 #include <boost/asio/steady_timer.hpp>
 
 int main(int argc, char const *argv[]) {
   fika::log::msg_logger_init();
+
+  std::vector<fika::queue_descriptor> queues = {
+      {"job_queue_detector", 100, sizeof(fika::file_job_shm)},
+      {"job_queue_parse", 100, sizeof(fika::file_job_shm)},
+      {"result_queue", 100, sizeof(fika::file_job_shm)}};
+
+  std::shared_ptr<fika::ipc_queue_manager> queue_mgr =
+      std::make_shared<fika::detail::boost_queue_manager>();
 
   auto configs =
       fika::config::load<fika::worker_configs>(SUPERVISOR_CONF.data());
@@ -38,8 +49,9 @@ int main(int argc, char const *argv[]) {
     std::cout << "Loaded worker: " << cfg.name << " (" << cfg.path << ")\n";
   }
 
-  fika::supervisor sup(factories);
-
+  fika::supervisor sup(factories, queues, queue_mgr);
+  sup.reset_queues();
+  sup.create_queues();
   sup.start_workers();
 
   boost::asio::io_context io;

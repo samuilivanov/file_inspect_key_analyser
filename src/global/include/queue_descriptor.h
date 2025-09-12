@@ -14,27 +14,18 @@
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "msg.h"
-#include "qm.h"
-#include <file_job.h>
-#include <thread>
+#ifndef QUEUE_DESCRIPTOR
+#define QUEUE_DESCRIPTOR
+#include <ctype.h>
+#include <string>
 
-int main(int argc, char const *argv[]) {
-  fika::log::msg_logger_init("qm.log");
-  fika::log::log_info("Starting qm");
+namespace fika {
+struct queue_descriptor {
+  std::string name;
+  std::size_t max_messages;
+  std::size_t message_size;
+};
 
-  fika::qm qm;
-  qm.setup();
+} // namespace fika
 
-  // Start results polling
-  std::thread result_thread([&qm] {
-    fika::log::log_info("QueueManager result-fetcher thread started");
-    while (true) {
-      qm.process_results();
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
-  });
-
-  result_thread.join();
-  return 0;
-}
+#endif

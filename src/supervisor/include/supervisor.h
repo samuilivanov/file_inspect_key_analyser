@@ -17,6 +17,8 @@
 #ifndef SUPERVISON_H
 #define SUPERVISON_H
 
+#include "ipc_queue_manager.h"
+#include "queue_descriptor.h"
 #include "worker.h"
 #include <memory>
 #include <vector>
@@ -27,7 +29,9 @@ class supervisor {
 public:
   using worker_factory_t = std::function<std::unique_ptr<worker>()>;
 
-  explicit supervisor(std::vector<worker_factory_t> factories);
+  explicit supervisor(std::vector<worker_factory_t> factories,
+                      std::vector<fika::queue_descriptor> queues,
+                      std::shared_ptr<ipc_queue_manager> queue_mgr);
   void run();
 
   template <typename Timer> void run_monitor_loop(Timer &timer) {
@@ -37,6 +41,10 @@ public:
   }
   void start_workers();
 
+  void reset_queues();
+  void create_queues();
+  std::vector<queue_descriptor> queues_;
+
   const std::vector<std::unique_ptr<worker>> &get_workers() const {
     return workers_;
   }
@@ -45,6 +53,7 @@ public:
 
 private:
   std::vector<std::unique_ptr<worker>> workers_;
+  std::shared_ptr<ipc_queue_manager> queue_mgr_;
 };
 
 } // namespace fika

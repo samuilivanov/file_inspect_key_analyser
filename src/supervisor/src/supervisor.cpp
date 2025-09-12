@@ -20,10 +20,14 @@
 #include "msg.h"
 #include "worker_configs.h"
 #include <boost/asio.hpp>
+#include <boost/interprocess/ipc/message_queue.hpp>
 
 namespace fika {
 
-supervisor::supervisor(std::vector<worker_factory_t> factories) {
+supervisor::supervisor(std::vector<worker_factory_t> factories,
+                       std::vector<queue_descriptor> queues,
+                       std::shared_ptr<ipc_queue_manager> queue_mgr)
+    : queues_(queues), queue_mgr_(queue_mgr) {
   for (auto &f : factories)
     workers_.push_back(f());
 }
@@ -40,6 +44,22 @@ void supervisor::monitor_once() {
       log::log_info("Restarting worker");
       w->restart();
     }
+  }
+}
+
+void supervisor::reset_queues() {
+  for (const auto &q : queues_) {
+    queue_mgr_->remove(q.name);
+    log::log_info("Removed stale queue: {}", q.name);
+  }
+}
+
+void supervisor::create_queues() {
+  for (const auto &q : queues_) {
+    queue_mgr_->create(q.name, q.max_messages, q.message_size);
+    std::cout << "Created queue: " << q.name
+              << " (max_messages=" << q.max_messages
+              << ", message_size=" << q.message_size << ")\n";
   }
 }
 
