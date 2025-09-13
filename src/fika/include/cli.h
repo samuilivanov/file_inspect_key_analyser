@@ -15,11 +15,18 @@
  */
 
 #pragma once
+#include "commands.h" // for fika::CommandType
+#include <string>
 
-#include <string_view>
+namespace fika::cli {
 
-inline constexpr std::string_view SUPERVISOR_CONF = "@FIKA_DATADIR@/supervisor.json";
-inline constexpr std::string_view FIKA_SPOOL_DIR = "@FIKA_SPOOL_DIR@";
-inline constexpr std::string_view FIKA_SPOOL_NEW_DIR = "@FIKA_SPOOL_DIR@/new";
-inline constexpr std::string_view FIKA_SPOOL_INCOMMING_DIR = "@FIKA_SPOOL_DIR@/incomming";
-inline constexpr std::string_view BINARIES_LOC = "@CMAKE_BINARY_DIR@/bin";
+struct ParsedCommand {
+  fika::CommandType type;
+  std::string service;
+};
+
+/// Parse argc/argv and return a ParsedCommand.
+/// Throws std::invalid_argument or boost::program_options::error on failure.
+ParsedCommand parse_command_line(int argc, char *argv[]);
+
+} // namespace fika::cli

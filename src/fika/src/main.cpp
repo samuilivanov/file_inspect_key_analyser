@@ -14,69 +14,58 @@
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "cli.h"
 #include "commands.h"
+#include "config.h"
 #include <boost/interprocess/ipc/message_queue.hpp>
-#include <boost/program_options.hpp>
+#include <boost/process.hpp>
 #include <iostream>
 
-namespace po = boost::program_options;
-namespace bip = boost::interprocess;
+bool is_supervisor_running() {
+  try {
+    // Must match the queue name supervisor creates
+    boost::interprocess::message_queue mq(boost::interprocess::open_only,
+                                          "fika_supervisor_mq");
+
+    // If we got here, the queue exists → supervisor is running
+    return true;
+  } catch (const boost::interprocess::interprocess_exception &ex) {
+    // No queue → supervisor not running
+    return false;
+  }
+}
+
+boost::process::child start_supervisor() {
+  std::cout << "Starting supervisor...\n";
+  return boost::process::child(
+      std::string(BINARIES_LOC) + "/supervisor",
+      boost::process::std_out > stdout,
+      boost::process::std_err >
+          stderr); // assumes "supervisor" binary is on PATH
+}
 
 void send_command(const fika::CommandMessage &msg) {
-  bip::message_queue mq(bip::open_or_create, "fika_supervisor_mq", 100,
-                        sizeof(fika::CommandMessage));
+  boost::interprocess::message_queue mq(boost::interprocess::open_or_create,
+                                        "fika_supervisor_mq", 100,
+                                        sizeof(fika::CommandMessage));
   mq.send(&msg, sizeof(msg), 0);
 }
 
 int main(int argc, char *argv[]) {
-  po::options_description desc("Commands");
-  desc.add_options()("help,h", "show help")(
-      "command,c", po::value<std::string>(),
-      "command to execute (start|stop|restart|reload|status|logs)")(
-      "service,s", po::value<std::string>(), "service name (optional)");
+  boost::process::child sup;
+  if (!is_supervisor_running()) {
+    sup = start_supervisor();
+    sup.detach(); // supervisor keeps running after fika exits
 
-  po::positional_options_description p;
-  p.add("command", 1);
-
-  po::variables_map vm;
+    // give it some time to initialize IPC
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+  }
   try {
-    po::store(
-        po::command_line_parser(argc, argv).options(desc).positional(p).run(),
-        vm);
-    po::notify(vm);
-  } catch (const boost::program_options::error &ex) {
+    auto parsed = fika::cli::parse_command_line(argc, argv);
+    send_command(fika::CommandMessage(parsed.type, parsed.service));
+  } catch (const std::exception &ex) {
     std::cerr << "Error: " << ex.what() << "\n";
-    std::cerr << desc << "\n";
     return EXIT_FAILURE;
   }
-
-  if (vm.count("help") || !vm.count("command")) {
-    std::cout << desc << "\n";
-    return 0;
-  }
-
-  std::string cmd_str = vm["command"].as<std::string>();
-  std::string service =
-      vm.count("service") ? vm["service"].as<std::string>() : "";
-
-  fika::CommandType cmd;
-  if (cmd_str == "start")
-    cmd = fika::CommandType::Start;
-  else if (cmd_str == "stop")
-    cmd = fika::CommandType::Stop;
-  else if (cmd_str == "restart")
-    cmd = fika::CommandType::Restart;
-  else if (cmd_str == "reload")
-    cmd = fika::CommandType::Reload;
-  else if (cmd_str == "status")
-    cmd = fika::CommandType::Status;
-  else if (cmd_str == "logs")
-    cmd = fika::CommandType::Logs;
-  else {
-    std::cerr << "Unknown command\n";
-    return 1;
-  }
-
-  send_command(fika::CommandMessage(cmd, service));
-  return 0;
+  return EXIT_SUCCESS;
 }

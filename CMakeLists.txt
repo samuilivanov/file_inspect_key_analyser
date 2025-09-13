@@ -108,6 +108,7 @@ if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR MODERN_CMAKE_BUILD_TESTING)
   add_subdirectory(src/global/tests)
   add_subdirectory(src/supervisor/tests)
   add_subdirectory(src/detect/tests)
+  add_subdirectory(src/fika/tests)
 endif()
 
 find_program(CPPCHECK cppcheck)
