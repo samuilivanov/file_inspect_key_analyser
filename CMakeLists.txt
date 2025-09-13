@@ -5,7 +5,34 @@ project(
   VERSION 0.1
   DESCRIPTION "A toolkit that detects and extracts metadata and text"
   LANGUAGES CXX)
+  
+  option(ENABLE_COVERAGE "Enable coverage reporting" OFF)
+  if(ENABLE_COVERAGE)
+      message(STATUS "Building with coverage flags")
+      if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+          add_compile_options(--coverage -O0 -g)
+          add_link_options(--coverage)
+      endif()
+  endif()
 
+  if(ENABLE_COVERAGE)
+    find_program(LCOV lcov)
+    find_program(GENHTML genhtml)
+
+    if(LCOV AND GENHTML)
+        add_custom_target(coverage
+            COMMAND ${LCOV} --directory . --zerocounters
+            COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+            COMMAND ${LCOV} --directory . --capture --output-file coverage.info
+            COMMAND ${LCOV} --remove coverage.info '/usr/*' --output-file coverage.info
+            COMMAND ${GENHTML} coverage.info --output-directory coverage-report
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            COMMENT "Running tests and generating coverage report"
+        )
+    else()
+        message(WARNING "lcov or genhtml not found! Coverage target will not work.")
+    endif()
+endif()
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 
   set(CMAKE_CXX_EXTENSIONS OFF)
@@ -80,4 +107,5 @@ if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR MODERN_CMAKE_BUILD_TESTING)
   add_subdirectory(src/util/tests)
   add_subdirectory(src/global/tests)
   add_subdirectory(src/supervisor/tests)
+  add_subdirectory(src/detect/tests)
 endif()
