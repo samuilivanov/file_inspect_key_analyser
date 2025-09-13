@@ -17,6 +17,8 @@
 #ifndef SUPERVISON_H
 #define SUPERVISON_H
 
+#include "cmd.h"
+#include "commands.h"
 #include "ipc_queue_manager.h"
 #include "queue_descriptor.h"
 #include "worker.h"
@@ -32,28 +34,29 @@ public:
   explicit supervisor(std::vector<worker_factory_t> factories,
                       std::vector<fika::queue_descriptor> queues,
                       std::shared_ptr<ipc_queue_manager> queue_mgr);
+
+  virtual ~supervisor() = default;
   void run();
 
-  template <typename Timer> void run_monitor_loop(Timer &timer) {
-    monitor_once();
-    timer.expires_after(std::chrono::seconds(1));
-    timer.async_wait([this, &timer](auto) { run_monitor_loop(timer); });
-  }
-  void start_workers();
-
-  void reset_queues();
-  void create_queues();
+  virtual void start_workers(const std::string &service_name = "");
+  virtual void stop_workers(const std::string &service_name = "");
+  virtual void handle_command(CommandType cmd_type,
+                              const std::string &service_name = "");
+  virtual void reset_queues();
+  virtual void create_queues();
   std::vector<queue_descriptor> queues_;
 
-  const std::vector<std::unique_ptr<worker>> &get_workers() const {
+  virtual const std::vector<worker_entity> &get_workers() const {
     return workers_;
   }
 
-  void monitor_once();
+  virtual void monitor_once();
 
 private:
-  std::vector<std::unique_ptr<worker>> workers_;
+  virtual void register_commands();
+  std::vector<worker_entity> workers_;
   std::shared_ptr<ipc_queue_manager> queue_mgr_;
+  std::map<CommandType, std::unique_ptr<cmd>> commands_;
 };
 
 } // namespace fika

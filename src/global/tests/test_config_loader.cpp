@@ -15,7 +15,7 @@
  */
 
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-#include "../config_loader.hpp"
+#include "../include/config_loader.hpp"
 #include "test_config.h"
 #include <doctest/doctest.h>
 

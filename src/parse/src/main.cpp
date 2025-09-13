@@ -16,8 +16,8 @@
 #include "ipc_client.h"
 #include "msg.h"
 #include "parser_registry.h"
-#include "parser_service.h"
 #include <boost/asio/post.hpp>
+#include <boost/asio/thread_pool.hpp>
 #include <thread>
 
 namespace {
@@ -40,7 +40,8 @@ int main() {
 
   fika::log::log_info("Starting parser service");
 
-  fika::ipc_client ipc("job_queue_parse");
+  fika::ipc_client<fika::file_job_shm, fika::file_job_shm> ipc(
+      "result_queue", "job_queue_parse");
   boost::asio::thread_pool pool_{std::thread::hardware_concurrency()};
 
   fika::parser_registry parsers;

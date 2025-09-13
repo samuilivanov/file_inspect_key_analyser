@@ -52,14 +52,7 @@ int main(int argc, char const *argv[]) {
   fika::supervisor sup(factories, queues, queue_mgr);
   sup.reset_queues();
   sup.create_queues();
-  sup.start_workers();
-
-  boost::asio::io_context io;
-  boost::asio::steady_timer timer(io, std::chrono::seconds(1));
-
-  sup.run_monitor_loop(timer);
-
-  io.run();
+  sup.run();
 
   return 0;
 }

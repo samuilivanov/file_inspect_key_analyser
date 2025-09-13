@@ -15,6 +15,9 @@
  */
 
 #include "supervisor.h"
+#include "cmd.h"
+#include "cmd_def.h"
+#include "commands.h"
 #include "config.h"
 #include "config_loader.hpp"
 #include "msg.h"
@@ -29,20 +32,33 @@ supervisor::supervisor(std::vector<worker_factory_t> factories,
                        std::shared_ptr<ipc_queue_manager> queue_mgr)
     : queues_(queues), queue_mgr_(queue_mgr) {
   for (auto &f : factories)
-    workers_.push_back(f());
+    workers_.push_back({f(), WorkerState::Stopped});
+  register_commands();
 }
 
-void supervisor::start_workers() {
+void supervisor::start_workers(const std::string &service_name) {
   for (auto &w : workers_) {
-    w->start();
+    if (service_name.empty() || w.w->name() == service_name) {
+      w.w->start();
+      w.state = WorkerState::Running;
+    }
   }
 }
 
 void supervisor::monitor_once() {
   for (auto &w : workers_) {
-    if (!w->is_alive()) {
+    if (!w.w->is_alive() && w.state == WorkerState::Running) {
       log::log_info("Restarting worker");
-      w->restart();
+      w.w->restart();
+    }
+  }
+}
+
+void supervisor::stop_workers(const std::string &service_name) {
+  for (auto &w : workers_) {
+    if (w.w->name() == service_name || service_name.empty()) {
+      w.w->stop();
+      w.state = WorkerState::Stopped;
     }
   }
 }
@@ -60,6 +76,42 @@ void supervisor::create_queues() {
     std::cout << "Created queue: " << q.name
               << " (max_messages=" << q.max_messages
               << ", message_size=" << q.message_size << ")\n";
+  }
+}
+
+void supervisor::register_commands() {
+  commands_[CommandType::Start] = std::make_unique<detail::start_command>();
+  commands_[CommandType::Stop] = std::make_unique<detail::stop_command>();
+  commands_[CommandType::Restart] = std::make_unique<detail::restart_command>();
+}
+
+void supervisor::handle_command(CommandType cmd_type,
+                                const std::string &service_name) {
+  auto it = commands_.find(cmd_type);
+  if (it != commands_.end()) {
+    it->second->execute(*this, service_name);
+  } else {
+    log::log_info("Unknown command");
+  }
+}
+
+void supervisor::run() {
+  using namespace boost::interprocess;
+  message_queue mq(open_or_create, "fika_supervisor_mq", 100,
+                   sizeof(CommandMessage));
+
+  bool stop_flag = false;
+  while (!stop_flag) {
+    CommandMessage msg;
+    std::size_t recv_size;
+    unsigned int priority;
+
+    if (mq.try_receive(&msg, sizeof(msg), recv_size, priority)) {
+      handle_command(msg.cmd, msg.service());
+    }
+    monitor_once();
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
   }
 }
 

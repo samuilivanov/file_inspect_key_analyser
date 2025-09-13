@@ -33,7 +33,7 @@ public:
   explicit magic_handle(std::unique_ptr<magic_api> api,
                         int flags = MAGIC_MIME_TYPE);
   ~magic_handle();
-  std::string detect(const std::string &filepath);
+  std::string detect(const std::string &filepath) override;
   std::string name() const override {
     return "libmagic";
   } // source identifier, e.g., "libmagic"

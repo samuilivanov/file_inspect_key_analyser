@@ -9,10 +9,11 @@ function(add_doctest name lib)
     Boost::thread
     Boost::system)
 endfunction()
-
 add_doctest(test_worker supervisor)
 add_doctest(test_supervisor supervisor)
+add_doctest(test_cmd supervisor)
 # add_doctest(test_loggercopy util)
 add_test(NAME test_worker COMMAND test_worker)
 add_test(NAME test_supervisor COMMAND test_supervisor)
+add_test(NAME test_cmd COMMAND test_cmd)
 # add_test(NAME test_loggercopy COMMAND test_loggercopy)

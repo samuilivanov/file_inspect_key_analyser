@@ -33,6 +33,7 @@ struct mock_child : public child_process {
     alive = false;
   }
   void wait() {}
+  std::string name() const override { return "test"; }
 };
 
 struct mock_queue_manager : public ipc_queue_manager {
@@ -106,6 +107,7 @@ TEST_CASE("Supervisor monitor_once restarts dead workers") {
   sup.monitor_once(); // restart dead workers
 
   // New mock created
+  // TODO (samuil) not sure how to fix this
   CHECK(mocks.size() == 2);
   CHECK(mocks[1]->running());
   // CHECK(mocks[0]->terminated == false); // old mock not explicitly terminated

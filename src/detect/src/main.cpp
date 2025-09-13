@@ -44,7 +44,8 @@ int main(int argc, char const *argv[]) {
 
   std::vector<std::unique_ptr<fika::file_detector>> dets;
 
-  fika::ipc_client ipc("job_queue_detector");
+  fika::ipc_client<fika::file_job_shm, fika::file_job_shm> ipc(
+      "result_queue", "job_queue_detector");
 
   dets.push_back(std::make_unique<fika::magic_handle>(
       std::make_unique<fika::libmagic_api>()));

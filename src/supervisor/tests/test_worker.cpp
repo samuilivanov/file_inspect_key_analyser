@@ -29,6 +29,7 @@ struct mock_child : public fika::child_process {
     alive = false;
   }
   void wait() {}
+  std::string name() const override { return "test"; }
 };
 
 TEST_CASE("worker start and is_alive") {

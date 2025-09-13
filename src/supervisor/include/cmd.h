@@ -14,33 +14,21 @@
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef PARSER_SERVICE_H
-#define PARSER_SERVICE_H
-
-#include "ipc_client.h"
-#include "parser_registry.h"
-#include "parser_worker.h"
-#include <atomic>
-#include <boost/asio/thread_pool.hpp>
-#include <thread>
+#ifndef COMMAND_H_INCLUDE
+#define COMMAND_H_INCLUDE
+#include <string>
 
 namespace fika {
-
-class parser_service {
+class supervisor;
+class cmd {
 public:
-  parser_service(const std::string &inputQueue,
-                 std::size_t workerCount = std::thread::hardware_concurrency());
-
-  void run();
-  void stop();
-
-private:
-  std::shared_ptr<ipc_client> client_;
-  std::shared_ptr<parser_registry> registry_;
-  std::shared_ptr<std::atomic<bool>> running_;
-  std::unique_ptr<boost::asio::thread_pool> pool_;
-  std::size_t workerCount_;
+  virtual ~cmd() = default;
+  virtual void execute(supervisor &sup,
+                       const std::string &service_name = "") = 0;
 };
+
 } // namespace fika
+
+// You can add ReloadCommand, StatusCommand, etc.
 
 #endif

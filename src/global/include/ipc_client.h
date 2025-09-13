@@ -25,16 +25,35 @@
 
 namespace fika {
 
-class ipc_client {
+template <typename SendType, typename RecvType> class ipc_client {
 public:
-  ipc_client(const std::string &qname);
-  bool try_receive_job(file_job_shm &job);
-  void receive_job(file_job_shm &job);
-  void send_result(const file_job_shm &job);
+  ipc_client(const std::string &send_queue, const std::string &recv_queue) {
+    // Only open existing queues
+    mq_send_ = std::make_unique<boost::interprocess::message_queue>(
+        boost::interprocess::open_only, send_queue.c_str());
+    mq_recv_ = std::make_unique<boost::interprocess::message_queue>(
+        boost::interprocess::open_only, recv_queue.c_str());
+  }
+
+  bool try_receive(RecvType &msg) {
+    size_t recv_size;
+    unsigned int priority;
+    return mq_recv_->try_receive(&msg, sizeof(RecvType), recv_size, priority);
+  }
+
+  void receive_job(RecvType &msg) {
+    size_t recv_size;
+    unsigned int priority;
+    return mq_recv_->receive(&msg, sizeof(RecvType), recv_size, priority);
+  }
+
+  void send_result(const SendType &msg) {
+    mq_send_->send(&msg, sizeof(SendType), 0);
+  }
 
 private:
-  std::unique_ptr<boost::interprocess::message_queue> mq;
-  std::unique_ptr<boost::interprocess::message_queue> mq_results;
+  std::unique_ptr<boost::interprocess::message_queue> mq_recv_;
+  std::unique_ptr<boost::interprocess::message_queue> mq_send_;
 };
 
 } // namespace fika

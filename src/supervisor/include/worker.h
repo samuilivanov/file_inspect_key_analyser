@@ -20,6 +20,7 @@
 #include "worker_configs.h"
 #include <boost/process.hpp>
 #include <chrono>
+#include <filesystem>
 #include <memory>
 #include <string>
 
@@ -30,13 +31,15 @@ struct child_process {
   virtual bool running() const = 0;
   virtual void terminate() = 0;
   virtual void wait() = 0;
+  virtual std::string name() const = 0;
 };
 
 class boost_child_process : public child_process {
 public:
   boost_child_process(const std::string &path,
                       const std::vector<std::string> &args)
-      : proc_(path, boost::process::args(args)) {}
+      : proc_(path, boost::process::args(args)),
+        proc_name(std::filesystem::path(path).filename()) {}
 
   bool running() const override { return proc_.running(); }
 
@@ -47,9 +50,11 @@ public:
   }
 
   void wait() override { proc_.wait(); }
+  std::string name() const override { return proc_name; }
 
 private:
   mutable boost::process::child proc_;
+  std::string proc_name;
 };
 
 class worker {
@@ -58,13 +63,22 @@ public:
 
   explicit worker(process_factory_t factory);
   void start();
+  void stop();
   bool is_alive() const;
   void restart();
+  std::string name() const;
 
 private:
   std::chrono::steady_clock::time_point last_heartbeat_;
   std::unique_ptr<child_process> process_;
   process_factory_t factory_;
+};
+
+enum class WorkerState { Running, Stopped };
+
+struct worker_entity {
+  std::unique_ptr<worker> w;
+  WorkerState state;
 };
 } // namespace fika
 

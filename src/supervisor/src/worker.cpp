@@ -24,6 +24,10 @@ void worker::start() {
   process_ = factory_();
   last_heartbeat_ = std::chrono::steady_clock::now();
 }
+void worker::stop() {
+  if (process_)
+    process_->terminate();
+}
 bool worker::is_alive() const { return process_ && process_->running(); }
 
 void worker::restart() {
@@ -33,5 +37,7 @@ void worker::restart() {
   }
   start();
 }
+
+std::string worker::name() const { return process_->name(); }
 
 } // namespace fika

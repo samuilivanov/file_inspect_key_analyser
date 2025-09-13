@@ -31,7 +31,7 @@ struct detection_result {
 
 class detector {
 public:
-  detector(std::vector<std::unique_ptr<file_detector>> detectors)
+  explicit detector(std::vector<std::unique_ptr<file_detector>> detectors)
       : detectors_(std::move(detectors)) {}
 
   detection_result detect_file(const std::string &file);
