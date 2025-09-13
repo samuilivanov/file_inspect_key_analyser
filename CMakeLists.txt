@@ -58,7 +58,7 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(httplib)
 
-find_package(Boost REQUIRED COMPONENTS log thread system)
+find_package(Boost REQUIRED COMPONENTS log thread system program_options)
 
 # Install locations (can be overridden via -D option)
 set(FIKA_BINDIR "${CMAKE_INSTALL_PREFIX}/bin" CACHE PATH "Directory for binaries")
@@ -108,4 +108,62 @@ if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR MODERN_CMAKE_BUILD_TESTING)
   add_subdirectory(src/global/tests)
   add_subdirectory(src/supervisor/tests)
   add_subdirectory(src/detect/tests)
+endif()
+
+find_program(CPPCHECK cppcheck)
+
+if(CPPCHECK)
+    # List of source files for cppcheck (could be entire src dir)
+    file(GLOB_RECURSE CPP_FILES
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*/src/*.cpp"
+)
+
+file(GLOB_RECURSE HEADER_FILES
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*/include/*.h"
+)
+
+    set(CPPCHECK_OPTIONS
+        --enable=all
+        --language=c++
+        --inconclusive
+        --force
+        --std=c++17
+        --inline-suppr
+        --verbose
+        --suppress=missingIncludeSystem
+    )
+
+    add_custom_target(cppcheck
+        COMMAND ${CPPCHECK} ${CPPCHECK_OPTIONS}
+                -I ${CMAKE_CURRENT_SOURCE_DIR}/src
+                -I ${CMAKE_CURRENT_SOURCE_DIR}/src/detect/include
+        -I ${CMAKE_CURRENT_SOURCE_DIR}/src/qm/include
+        -I ${CMAKE_CURRENT_SOURCE_DIR}/src/parser/include
+        -I ${CMAKE_CURRENT_SOURCE_DIR}/src/supervisor/include
+        -I ${CMAKE_CURRENT_SOURCE_DIR}/src/ingestd/include
+                ${CPP_FILES} -I ${HEADER_FILES}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Running cppcheck..."
+        VERBATIM
+    )
+endif()
+
+find_program(CLANG_TIDY clang-tidy)
+
+if(CLANG_TIDY)
+file(GLOB_RECURSE CPP_FILES
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*/src/*.cpp"
+)
+
+file(GLOB_RECURSE HEADER_FILES
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*/include/*.h"
+)
+
+
+    add_custom_target(clang-tidy
+        COMMAND ${CLANG_TIDY} -p=${CMAKE_BINARY_DIR} ${CPP_FILES} ${HEADER_FILES}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Running clang-tidy on all source files..."
+        VERBATIM
+    )
 endif()
