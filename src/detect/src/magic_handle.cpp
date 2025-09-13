@@ -15,23 +15,30 @@
  */
 
 #include "magic_handle.h"
+#include "detectors/magic_api.h"
+#include <memory>
 #include <stdexcept>
 
-namespace fika::util {
-magic_handle::magic_handle(int flags) {
-  handle = magic_open(flags);
-  if (!handle)
+namespace fika {
+magic_handle::magic_handle(std::unique_ptr<magic_api> api, int flags)
+    : api_(std::move(api)) {
+  handle_ = api_->open(flags);
+  if (!handle_)
     throw std::runtime_error("Failed to open libmagic handle");
-  if (magic_load(handle, nullptr) != 0)
-    throw std::runtime_error(magic_error(handle));
+  if (api_->load(handle_, nullptr) != 0)
+    throw std::runtime_error(api_->error(handle_));
+}
+
+std::string magic_handle::detect(const std::string &filepath) {
+  const char *res = api_->file(handle_, filepath.c_str());
+  if (!res)
+    throw std::runtime_error(api_->error(handle_));
+  return res;
 }
 
 magic_handle::~magic_handle() {
-  if (handle)
-    magic_close(handle);
-}
-std::string magic_handle::file(const std::string &file) {
-  return magic_file(handle, file.c_str());
+  if (handle_)
+    api_->close(handle_);
 }
 
-} // namespace fika::util
+} // namespace fika

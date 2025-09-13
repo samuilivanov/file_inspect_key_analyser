@@ -17,10 +17,13 @@
 #include "detector.h"
 namespace fika::detect {
 detection_result detector::detect_file(const std::string &file) {
-  auto mime = magic_cookie.file(file);
-  if (!mime.empty() && mime != "application/octet-stream")
-    return {mime, "libmagic"};
-  return {"application/octet-stream", "libmagic"};
+  for (auto &det : detectors_) {
+    auto mime = det->detect(file);
+    if (!mime.empty() && mime != "application/octet-stream") {
+      return {mime, det->name(), 1.0};
+    }
+  }
+  return {"application/octet-stream", "none", 1.0};
 }
 
 } // namespace fika::detect

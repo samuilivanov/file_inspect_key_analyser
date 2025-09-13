@@ -14,6 +14,7 @@
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "detectors/magic_api.h"
 #include "file_job.h"
 #include "ipc_client.h"
 #include "msg.h"
@@ -41,8 +42,14 @@ int main(int argc, char const *argv[]) {
   fika::log::msg_logger_init("detect.log");
   fika::log::log_info("Starting detect service");
 
+  std::vector<std::unique_ptr<fika::file_detector>> dets;
+
   fika::ipc_client ipc("job_queue_detector");
-  fika::detect::detector d;
+
+  dets.push_back(std::make_unique<fika::magic_handle>(
+      std::make_unique<fika::libmagic_api>()));
+
+  fika::detect::detector d(std::move(dets));
 
   while (true) {
     fika::file_job_shm job{};

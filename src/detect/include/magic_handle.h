@@ -16,20 +16,29 @@
 
 #ifndef MAGIC_HANDLE_H
 #define MAGIC_HANDLE_H
+#include "detectors/file_detector.h"
+#include "detectors/magic_api.h"
 #include <magic.h>
+#include <memory>
 #include <string>
-namespace fika::util {
 
-class magic_handle {
+namespace fika {
+
+class magic_handle : public file_detector {
 private:
-  magic_t handle;
+  std::unique_ptr<magic_api> api_;
+  void *handle_;
 
 public:
-  explicit magic_handle(int flags = MAGIC_MIME_TYPE);
+  explicit magic_handle(std::unique_ptr<magic_api> api,
+                        int flags = MAGIC_MIME_TYPE);
   ~magic_handle();
-  std::string file(const std::string &file);
+  std::string detect(const std::string &filepath);
+  std::string name() const override {
+    return "libmagic";
+  } // source identifier, e.g., "libmagic"
 };
 
-} // namespace fika::util
+} // namespace fika
 
 #endif
