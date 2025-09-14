@@ -23,14 +23,18 @@ int main(int argc, char const *argv[]) {
   fika::log::msg_logger_init("qm.log");
   fika::log::log_info("Starting qm");
 
-  fika::qm qm;
-  qm.setup();
+  fika::qipc<fika::boost_job_sender, fika::boost_job_sender,
+             fika::boost_job_receiver>
+      ipc{{"job_queue_detector"}, {"job_queue_parse"}, {"result_queue"}};
+  fika::qm q(ipc);
+
+  q.setup();
 
   // Start results polling
-  std::thread result_thread([&qm] {
+  std::thread result_thread([&q] {
     fika::log::log_info("QueueManager result-fetcher thread started");
     while (true) {
-      qm.process_results();
+      q.process_results();
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
   });
