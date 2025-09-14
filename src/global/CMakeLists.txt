@@ -1,7 +1,7 @@
 file(GLOB HEADER_LIST CONFIGURE_DEPENDS "${fika_SOURCE_DIR}/global/*.h")
 
 # Make an automatic library - will be static or dynamic based on user setting
-add_library(global src/dummy.cpp ${HEADER_LIST})
+add_library(global src/message_queues.cpp ${HEADER_LIST})
 
 # We need this directory, and users of our library will need it too
 target_include_directories(global PUBLIC include .)

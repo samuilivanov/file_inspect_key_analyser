@@ -14,4 +14,18 @@
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-void dummy() {}
+#include "message_queues.h"
+
+namespace fika {
+void boost_job_sender::send(const file_job_shm &job) {
+  mq.send(&job, sizeof(job), 0);
+}
+
+file_job_shm boost_job_receiver::receive() {
+  file_job_shm job;
+  size_t recv_size;
+  unsigned int priority;
+  mq.receive(&job, sizeof(job), recv_size, priority);
+  return job;
+}
+} // namespace fika

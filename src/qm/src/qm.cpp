@@ -49,7 +49,7 @@ void qm::add_job(file_job job) {
 void qm::process_results() {
   file_job_shm result{};
   while (true) {
-    ipc.receive_result(result);
+    result = ipc.receive_result();
     // Add job if missing
     auto it =
         std::find_if(jobs_in_memory.begin(), jobs_in_memory.end(),

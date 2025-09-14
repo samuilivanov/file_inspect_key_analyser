@@ -21,17 +21,25 @@
 #include <memory>
 namespace fika {
 
-class qipc {
-public:
-  qipc(/* args */);
-  ~qipc();
-  void send_job(const file_job_shm &job);
-  void receive_result(file_job_shm &job);
+template <typename detector_t, typename parser_t, typename result_t>
+struct qipc {
+  detector_t mq_detector;
+  parser_t mq_parser;
+  result_t mq_result;
+  void send_job(const file_job_shm &job) {
+    switch (job.type) {
+    case JobType::DETECTOR:
+      mq_detector.send(job);
+      break;
+    case JobType::PARSER:
+      mq_parser.send(job);
+      break;
+    default:
+      break;
+    }
+  }
 
-private:
-  std::unique_ptr<boost::interprocess::message_queue> mq_detector;
-  std::unique_ptr<boost::interprocess::message_queue> mq_parse;
-  std::unique_ptr<boost::interprocess::message_queue> mq_result;
+  file_job_shm receive_result() { return mq_result.receive(); }
 };
 
 } // namespace fika

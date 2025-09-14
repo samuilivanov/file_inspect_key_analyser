@@ -14,34 +14,34 @@
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef QM_H_INCLUDE
-#define QM_H_INCLUDE
+#ifndef MESSAGE_QUEUES_H
+#define MESSAGE_QUEUES_H
 
 #include "file_job.h"
-#include "message_queues.h"
-#include "qipc.h"
-#include "state_machine.h"
-#include <vector>
+#include <boost/interprocess/ipc/message_queue.hpp>
+#include <memory>
+#include <stddef.h>
 
 namespace fika {
 
-class qm {
+struct boost_job_sender {
+  boost_job_sender(const std::string &queue_name)
+      : mq(boost::interprocess::open_only, queue_name.c_str()) {}
 
-public:
-  void setup();
-  void add_job(file_job job); // register new jobs
-  void process_results();     // poll results from workers
-  void handle_event(file_job &job, Event ev);
+  void send(const file_job_shm &job);
 
 private:
-  qipc<boost_job_sender, boost_job_sender, boost_job_receiver> ipc{
-      {"job_queue_detector"}, {"job_queue_parse"}, {"result_queue"}};
+  boost::interprocess::message_queue mq;
+};
 
-  state_machine sm;
-  std::vector<file_job> jobs_in_memory;
+struct boost_job_receiver {
+  boost_job_receiver(const std::string &queue_name)
+      : mq(boost::interprocess::open_only, queue_name.c_str()) {}
 
-  void send_to_worker(const file_job &job);
-  void scan_new_files();
+  file_job_shm receive();
+
+private:
+  boost::interprocess::message_queue mq;
 };
 } // namespace fika
 
