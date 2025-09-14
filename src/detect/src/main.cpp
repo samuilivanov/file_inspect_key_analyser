@@ -18,6 +18,7 @@
 #include "file_job.h"
 #include "ipc_client.h"
 #include "msg.h"
+#include "service.h"
 #include <csignal>
 #include <detector.h>
 #include <iostream>
@@ -41,30 +42,43 @@ inline fika::MimeType mime_string_to_enum(const std::string &mimeStr) {
 int main(int argc, char const *argv[]) {
   fika::log::msg_logger_init("detect.log");
   fika::log::log_info("Starting detect service");
+  try {
+    fika::MsgQueueSender<fika::file_job_shm> sender("result_queue");
+    fika::MsgQueueReceiver<fika::file_job_shm> receiver("job_queue_detector");
+    std::vector<std::unique_ptr<fika::file_detector>> dets;
 
-  std::vector<std::unique_ptr<fika::file_detector>> dets;
+    dets.push_back(std::make_unique<fika::magic_handle>(
+        std::make_unique<fika::libmagic_api>()));
 
-  fika::ipc_client<fika::file_job_shm, fika::file_job_shm> ipc(
-      "result_queue", "job_queue_detector");
+    fika::detect::detector d(std::move(dets));
+    // The actual work to be done per job
+    auto handler = [&d](const fika::file_job_shm &job) -> fika::file_job_shm {
+      std::cout << "Processing job " << job.id << "\n";
+      fika::file_job_shm r = job;
+      auto result = d.detect_file(job.path);
+      r.mime = mime_string_to_enum(result.mime_type);
+      fika::log::log_info("Detect file: {}: {}", job.path, result.mime_type);
+      if (result.mime_type != "application/octet-stream") {
+        r.status = fika::Status::DETECTING;
+      } else {
+        r.status = fika::Status::FAILED;
+      }
+      return r;
+    };
 
-  dets.push_back(std::make_unique<fika::magic_handle>(
-      std::make_unique<fika::libmagic_api>()));
+    fika::Service<fika::file_job_shm, fika::file_job_shm> service(
+        receiver, sender, handler);
 
-  fika::detect::detector d(std::move(dets));
+    service.start();
 
-  while (true) {
-    fika::file_job_shm job{};
-    ipc.receive_job(job);
-    fika::log::log_info("processing job {}", job.id);
-    auto result = d.detect_file(job.path);
-    job.mime = mime_string_to_enum(result.mime_type);
-    fika::log::log_info("Detect file: {}: {}", job.path, result.mime_type);
-    if (result.mime_type != "application/octet-stream") {
-      job.status = fika::Status::DETECTING;
-    } else {
-      job.status = fika::Status::FAILED;
-    }
-    ipc.send_result(job);
+    std::cout << "Service running. Press Enter to stop...\n";
+    std::cin.get();
+
+    service.stop();
+
+  } catch (const std::exception &e) {
+    std::cerr << "Service failed: " << e.what() << std::endl;
+    return 1;
   }
 
   fika::log::log_info("Stopping detect service");
