@@ -67,6 +67,7 @@ struct file_job_shm {
     status = fj.status;
     type = fj.type;
     mime = fj.mime;
+    stop = fj.stop;
   }
 
   file_job to_file_job() const {
@@ -77,6 +78,7 @@ struct file_job_shm {
     fj.status = status;
     fj.type = type;
     fj.mime = mime;
+    fj.stop = stop;
     return fj;
   }
 };

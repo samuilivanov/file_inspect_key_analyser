@@ -22,6 +22,7 @@
 #include <csignal>
 #include <detector.h>
 #include <iostream>
+#include <map>
 
 // TODO (samuil) this function should be moved to another location it will
 // become quite large inless something else if thought of
@@ -40,11 +41,17 @@ inline fika::MimeType mime_string_to_enum(const std::string &mimeStr) {
 } // namespace
 
 int main(int argc, char const *argv[]) {
-  fika::log::msg_logger_init("detect.log");
+  fika::log::msg_logger_init();
   fika::log::log_info("Starting detect service");
   try {
-    fika::MsgQueueSender<fika::file_job_shm> sender("result_queue");
+    std::map<std::string,
+             std::shared_ptr<fika::MsgQueueSender<fika::file_job_shm>>>
+        senders;
+    senders.emplace("qm",
+                    std::make_shared<fika::MsgQueueSender<fika::file_job_shm>>(
+                        "result_queue"));
     fika::MsgQueueReceiver<fika::file_job_shm> receiver("job_queue_detector");
+
     std::vector<std::unique_ptr<fika::file_detector>> dets;
 
     dets.push_back(std::make_unique<fika::magic_handle>(
@@ -52,7 +59,8 @@ int main(int argc, char const *argv[]) {
 
     fika::detect::detector d(std::move(dets));
     // The actual work to be done per job
-    auto handler = [&d](const fika::file_job_shm &job) -> fika::file_job_shm {
+    auto handler = [&d](const fika::file_job_shm &job)
+        -> std::pair<std::string, fika::file_job_shm> {
       std::cout << "Processing job " << job.id << "\n";
       fika::file_job_shm r = job;
       auto result = d.detect_file(job.path);
@@ -63,16 +71,13 @@ int main(int argc, char const *argv[]) {
       } else {
         r.status = fika::Status::FAILED;
       }
-      return r;
+      return std::make_pair("qm", r);
     };
 
     fika::Service<fika::file_job_shm, fika::file_job_shm> service(
-        receiver, sender, handler);
+        receiver, senders, handler);
 
     service.start();
-
-    std::cout << "Service running. Press Enter to stop...\n";
-    std::cin.get();
 
     service.stop();
 

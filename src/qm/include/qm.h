@@ -21,16 +21,14 @@
 #include "file_job.h"
 #include "message_queues.h"
 #include "msg.h"
-#include "qipc.h"
 #include "state_machine.h"
 #include <vector>
 
 namespace fika {
 
-template <typename ipc_t> class qm {
+class qm {
 
 public:
-  qm(ipc_t &ipc_ref) : ipc(ipc_ref) {}
   void setup() {
     // TODO (samuil) redesign this setup function
     std::filesystem::path root = FIKA_SPOOL_DIR.data();
@@ -45,40 +43,35 @@ public:
     }
   }
 
-  void add_job(file_job job) {
+  std::pair<std::string, file_job_shm> add_job(file_job job) {
     job.status = Status::NEW;
     jobs_in_memory.push_back(job);
     log::log_info("Registed job {}", job.id);
 
     // Submit event drives the FSM
-    handle_event(jobs_in_memory.back(), Event::SUBMIT);
+    return handle_event(jobs_in_memory.back(), Event::SUBMIT);
   }
 
-  void process_results() {
-    file_job_shm result{};
-    result = ipc.receive_result();
-    // Add job if missing
-    auto it =
-        std::find_if(jobs_in_memory.begin(), jobs_in_memory.end(),
-                     [&](const file_job &j) { return j.id == result.id; });
+  std::pair<std::string, file_job_shm>
+  process_results(const file_job_shm &job) {
+    auto it = std::find_if(jobs_in_memory.begin(), jobs_in_memory.end(),
+                           [&](const file_job &j) { return j.id == job.id; });
 
     if (it == jobs_in_memory.end()) {
-      add_job(result.to_file_job());
-      it = std::prev(jobs_in_memory.end());
+      log::log_info("adding new job and return");
+      return add_job(job.to_file_job());
     }
 
     // FSM event mapping
-    switch (result.status) {
+    switch (job.status) {
     case Status::DETECTING:
-      it->mime = result.mime; // TODO (samuil) the in memory object should
-                              // be updated not thsi bullshit
-      handle_event(*it, Event::DETECTION_OK);
-      break;
+      it->mime = job.mime; // TODO (samuil) the in memory object should
+                           // be updated not thsi bullshit
+      return handle_event(*it, Event::DETECTION_OK);
     case Status::FAILED:
-      handle_event(*it, Event::DETECTION_FAIL);
-      break;
+      return handle_event(*it, Event::DETECTION_FAIL);
     case Status::PARSING:
-      handle_event(*it, Event::PARSE_OK);
+      return handle_event(*it, Event::PARSE_OK);
       break;
     case Status::DONE:
       log::log_info("Job {} is fully DONE", it->id);
@@ -86,34 +79,32 @@ public:
     default:
       break;
     }
+    return {"done", file_job_shm{}};
   }
 
-  void handle_event(file_job &job, Event ev) {
+  std::pair<std::string, file_job_shm> handle_event(file_job &job, Event ev) {
+    file_job_shm j{};
     if (sm.apply(job, ev)) {
-      send_to_worker(job);
+      j.from_file_job(job);
     }
+    std::string qname;
+    switch (job.type) {
+    case JobType::DETECTOR:
+      qname = "detect";
+      break;
+    case JobType::PARSER:
+      qname = "parse";
+      break;
+    default:
+      break;
+    }
+    log::log_info("sending to {} service", qname);
+    return std::make_pair(qname, j);
   }
 
 private:
-  ipc_t &ipc;
-
   state_machine sm;
   std::vector<file_job> jobs_in_memory;
-
-  void send_to_worker(const file_job &job) {
-    file_job_shm jobs{};
-    jobs.from_file_job(job);
-    // TODO (samuil) this can be a map with the different services that gets the
-    // string and in the log just put that instead of having if else just for
-    // the log to be different
-    if (job.type == JobType::DETECTOR) {
-      ipc.send_job(jobs);
-      log::log_info("Sent job {} to detectd", job.id);
-    } else if (job.type == JobType::PARSER) {
-      ipc.send_job(jobs);
-      log::log_info("Sent job {} to parsed", job.id);
-    }
-  }
 
   void scan_new_files() {
     std::filesystem::path root = FIKA_SPOOL_NEW_DIR;

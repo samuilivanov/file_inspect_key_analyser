@@ -14,31 +14,43 @@
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "ipc_client.h"
 #include "msg.h"
 #include "qm.h"
+#include "service.h"
 #include <file_job.h>
 #include <thread>
 
 int main(int argc, char const *argv[]) {
+
   fika::log::msg_logger_init("qm.log");
   fika::log::log_info("Starting qm");
+  fika::MsgQueueReceiver<fika::file_job_shm> receiver("result_queue");
 
-  fika::qipc<fika::boost_job_sender, fika::boost_job_sender,
-             fika::boost_job_receiver>
-      ipc{{"job_queue_detector"}, {"job_queue_parse"}, {"result_queue"}};
-  fika::qm q(ipc);
+  std::map<std::string,
+           std::shared_ptr<fika::MsgQueueSender<fika::file_job_shm>>>
+      senders;
+  senders.emplace("parse",
+                  std::make_shared<fika::MsgQueueSender<fika::file_job_shm>>(
+                      "job_queue_parse"));
+  senders.emplace("detect",
+                  std::make_shared<fika::MsgQueueSender<fika::file_job_shm>>(
+                      "job_queue_detector"));
 
+  fika::qm q;
   q.setup();
 
-  // Start results polling
-  std::thread result_thread([&q] {
-    fika::log::log_info("QueueManager result-fetcher thread started");
-    while (true) {
-      q.process_results();
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
-  });
+  auto handler = [&q](const fika::file_job_shm &job)
+      -> std::pair<std::string, fika::file_job_shm> {
+    return q.process_results(job);
+  };
 
-  result_thread.join();
+  fika::Service<fika::file_job_shm, fika::file_job_shm> service(
+      receiver, senders, handler);
+
+  service.start();
+
+  service.stop();
+
   return 0;
 }
