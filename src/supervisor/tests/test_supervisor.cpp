@@ -50,6 +50,7 @@ struct mock_queue_manager : public ipc_queue_manager {
               std::size_t message_size) override {
     created.push_back({name, max_messages, message_size});
   }
+  void send_stop_job(const std::string &queue_name) {}
 };
 
 TEST_CASE("Supervisor creates workers correctly") {

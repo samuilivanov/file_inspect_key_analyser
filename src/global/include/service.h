@@ -42,23 +42,26 @@ public:
 
   void start() {
     running_ = true;
-    receiverThread_ = boost::thread([this] { receiveLoop(); });
+    receiveLoop();
   }
 
   void stop() {
     if (!running_)
       return;
     running_ = false;
-    pool_.join(); // wait for pool tasks
     receiverThread_.join();
   }
 
 private:
   void receiveLoop() {
     while (running_) {
-      Job job;
+      Job job{};
       receiver_.receive(job);
       // Detect poison pill
+      if (job.stop) {
+        break; // break out of receive loop, but don't kill pool yet
+      }
+
       if constexpr (std::is_same_v<Job, StopJob>) {
         if (!running_)
           break;
@@ -68,6 +71,7 @@ private:
         sender_.send(result);
       });
     }
+    pool_.join();
   }
 
   MsgQueueReceiver<Job> &receiver_;

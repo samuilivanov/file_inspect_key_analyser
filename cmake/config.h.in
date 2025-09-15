@@ -18,8 +18,14 @@
 
 #include <string_view>
 
-inline constexpr std::string_view SUPERVISOR_CONF = "@FIKA_DATADIR@/supervisor.json";
+inline constexpr std::string_view SUPERVISOR_CONF =
+    "@FIKA_DATADIR@/supervisor.json";
 inline constexpr std::string_view FIKA_SPOOL_DIR = "@FIKA_SPOOL_DIR@";
 inline constexpr std::string_view FIKA_SPOOL_NEW_DIR = "@FIKA_SPOOL_DIR@/new";
-inline constexpr std::string_view FIKA_SPOOL_INCOMMING_DIR = "@FIKA_SPOOL_DIR@/incomming";
+inline constexpr std::string_view FIKA_SPOOL_INCOMMING_DIR =
+    "@FIKA_SPOOL_DIR@/incomming";
 inline constexpr std::string_view BINARIES_LOC = "@CMAKE_BINARY_DIR@/bin";
+
+inline constexpr std::string_view QM_MESSAGE_QUEUE = "result_queue";
+inline constexpr std::string_view DETECT_MESSAGE_QUEUE = "job_queue_detector";
+inline constexpr std::string_view PARSE_MESSAGE_QUEUE = "job_queue_parse";

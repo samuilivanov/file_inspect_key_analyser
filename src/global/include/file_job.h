@@ -48,6 +48,7 @@ struct file_job {
   Status status;
   JobType type;
   MimeType mime;
+  bool stop = false;
 };
 
 struct file_job_shm {
@@ -57,6 +58,7 @@ struct file_job_shm {
   Status status;
   JobType type;
   MimeType mime;
+  bool stop = false;
 
   void from_file_job(const file_job &fj) {
     std::strncpy(id, fj.id.c_str(), MAX_ID_SIZE - 1);

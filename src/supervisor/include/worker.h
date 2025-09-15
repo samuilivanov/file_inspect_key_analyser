@@ -33,7 +33,6 @@ struct child_process {
   virtual bool running() const = 0;
   virtual void terminate() = 0;
   virtual void wait() = 0;
-  // virtual void stop(std::chrono::seconds timeout) = 0;
   virtual std::string name() const = 0;
 };
 
@@ -51,20 +50,6 @@ public:
       proc_.terminate();
     }
   }
-
-  // void stop(std::chrono::seconds timeout) override {
-  //   if (!proc_.running())
-  //     return;
-
-  //   ::kill(proc_.id(), SIGTERM);
-  //   timer_.expires_after(timeout);
-  //   timer_.async_wait([this](const boost::system::error_code &ec) {
-  //     if (!ec && proc_.running()) {
-  //       log::log_warn("Timeout expired, sending SIGKILL...");
-  //       proc_.terminate();
-  //     }
-  //   });
-  // }
 
   void wait() override { proc_.wait(); }
   std::string name() const override { return proc_name; }
@@ -84,6 +69,7 @@ public:
   void stop();
   bool is_alive() const;
   void restart();
+  void wait() const;
   std::string name() const;
 
 private:

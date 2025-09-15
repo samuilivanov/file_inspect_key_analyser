@@ -28,12 +28,16 @@ void worker::stop() {
   if (process_)
     process_->terminate();
 }
+
+void worker::wait() const {
+  if (process_)
+    process_->wait();
+}
 bool worker::is_alive() const { return process_ && process_->running(); }
 
 void worker::restart() {
   if (process_ && process_->running()) {
     process_->terminate();
-    process_->wait();
   }
   start();
 }

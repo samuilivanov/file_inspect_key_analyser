@@ -24,6 +24,16 @@
 #include "worker_configs.h"
 #include <boost/asio.hpp>
 #include <boost/interprocess/ipc/message_queue.hpp>
+#include <chrono>
+
+namespace {
+
+std::map<std::string, std::string> binary_to_queue = {
+    {"detect", DETECT_MESSAGE_QUEUE.data()},
+    {"parse", PARSE_MESSAGE_QUEUE.data()},
+    {"mq", QM_MESSAGE_QUEUE.data()}};
+
+} // namespace
 
 namespace fika {
 
@@ -55,10 +65,24 @@ void supervisor::monitor_once() {
 }
 
 void supervisor::stop_workers(const std::string &service_name) {
-  for (auto &w : workers_) {
-    if (w.w->name() == service_name || service_name.empty()) {
+  if (service_name.empty()) {
+    for (auto &w : workers_) {
       w.w->stop();
       w.state = WorkerState::Stopped;
+    }
+    reset_queues();
+  } else {
+
+    for (auto &w : workers_) {
+      if (w.w->name() == service_name) {
+        // 1. enqueue poison pill
+        queue_mgr_->send_stop_job(binary_to_queue[service_name]);
+
+        // 2. wait for graceful shutdown
+        w.w->wait();
+
+        w.state = WorkerState::Stopped;
+      }
     }
   }
 }
