@@ -1,6 +1,8 @@
 /*
  * This file is part of Fika.
  *
+ * Copyright [2025] Samuil Ivanov
+ *
  * Fika is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; version 2 of the License.
@@ -15,10 +17,12 @@
  */
 
 #include "msg.h"
-#include <memory>
+
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
+
+#include <memory>
 #include <string>
 
 namespace fika::log {
@@ -38,7 +42,7 @@ void msg_logger_init(const std::string &log_file) {
     typedef sinks::text_file_backend backend_t;
     boost::shared_ptr<backend_t> backend = boost::make_shared<backend_t>(
         boost::log::keywords::file_name = log_file,
-        boost::log::keywords::open_mode = std::ios::app, // append mode
+        boost::log::keywords::open_mode = std::ios::app,  // append mode
         boost::log::keywords::auto_flush = true);
 
     typedef sinks::synchronous_sink<backend_t> sink_t;
@@ -73,4 +77,4 @@ void msg_logger_init(const std::string &log_file) {
   });
 }
 
-} // namespace fika::log
+}  // namespace fika::log

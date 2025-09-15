@@ -1,6 +1,8 @@
 /*
  * This file is part of Fika.
  *
+ * Copyright [2025] Samuil Ivanov
+ *
  * Fika is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; version 2 of the License.
@@ -15,17 +17,20 @@
  */
 
 #include "ingestd.h"
-#include "config.h"
-#include "file_job.h"
-#include "msg.h"
+
+#include <httplib.h>
+
 #include <chrono>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
-#include <httplib.h>
 #include <iostream>
 
-// TODO (samuil) move this to util
+#include "config.h"
+#include "file_job.h"
+#include "msg.h"
+
+// TODO(samuil): move this to util
 namespace {
 void generate_unique_id(char id[64]) {
   // Timestamp in milliseconds
@@ -35,7 +40,7 @@ void generate_unique_id(char id[64]) {
                .count();
 
   // Random 4-digit hex
-  static thread_local std::mt19937 rng(std::random_device{}());
+  static thread_local std::mt19937 rng(std::random_device{ }());
   std::uniform_int_distribution<int> dist(0, 0xffff);
   int rand_hex = dist(rng);
 
@@ -43,7 +48,7 @@ void generate_unique_id(char id[64]) {
   std::snprintf(id, 64, "job_%lld_%04x", static_cast<long long>(t), rand_hex);
 }
 
-} // namespace
+}  // namespace
 
 namespace fika {
 
@@ -66,7 +71,7 @@ void ingestd::handle_file(const std::string &tmp_path,
 }
 
 void ingestd::run() {
-  // TODO (samuil) httplib should be replaced with boost beast
+  // TODO(samuil): httplib should be replaced with boost beast
   httplib::Server svr;
 
   svr.Post(
@@ -100,4 +105,4 @@ void ingestd::run() {
   svr.listen("0.0.0.0", 8080);
 }
 
-} // namespace fika
+}  // namespace fika

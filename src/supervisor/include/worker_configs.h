@@ -1,6 +1,8 @@
 /*
  * This file is part of Fika.
  *
+ * Copyright [2025] Samuil Ivanov
+ *
  * Fika is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; version 2 of the License.
@@ -14,11 +16,15 @@
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef WORKER_CONFIGS_H
-#define WORKER_CONFIGS_H
-#include <nlohmann/json.hpp>
+#ifndef SRC_SUPERVISOR_INCLUDE_WORKER_CONFIGS_H_
+#define SRC_SUPERVISOR_INCLUDE_WORKER_CONFIGS_H_
+
+// clang-format off
 #include <string>
 #include <vector>
+
+#include <nlohmann/json.hpp>
+// clang-format on
 
 namespace fika {
 struct worker_config {
@@ -46,6 +52,6 @@ struct worker_configs {
     return cfgs;
   }
 };
-} // namespace fika
+}  // namespace fika
 
-#endif
+#endif  // SRC_SUPERVISOR_INCLUDE_WORKER_CONFIGS_H_

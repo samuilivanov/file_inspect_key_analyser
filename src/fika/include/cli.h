@@ -1,6 +1,8 @@
 /*
  * This file is part of Fika.
  *
+ * Copyright [2025] Samuil Ivanov
+ *
  * Fika is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; version 2 of the License.
@@ -15,8 +17,9 @@
  */
 
 #pragma once
-#include "commands.h" // for fika::CommandType
 #include <string>
+
+#include "commands.h"  // for fika::CommandType
 
 namespace fika::cli {
 
@@ -29,4 +32,4 @@ struct ParsedCommand {
 /// Throws std::invalid_argument or boost::program_options::error on failure.
 ParsedCommand parse_command_line(int argc, char *argv[]);
 
-} // namespace fika::cli
+}  // namespace fika::cli

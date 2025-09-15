@@ -1,6 +1,8 @@
 /*
  * This file is part of Fika.
  *
+ * Copyright [2025] Samuil Ivanov
+ *
  * Fika is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; version 2 of the License.
@@ -14,11 +16,11 @@
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef PARSERS_H
-#define PARSERS_H
+#ifndef SRC_PARSE_INCLUDE_PARSERS_H_
+#define SRC_PARSE_INCLUDE_PARSERS_H_
 
 #include "parsers/img_parser.h"
 #include "parsers/pdf_parser.h"
 #include "parsers/text_parser.h"
 
-#endif
+#endif  // SRC_PARSE_INCLUDE_PARSERS_H_

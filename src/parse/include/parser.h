@@ -1,6 +1,8 @@
 /*
  * This file is part of Fika.
  *
+ * Copyright [2025] Samuil Ivanov
+ *
  * Fika is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; version 2 of the License.
@@ -14,8 +16,8 @@
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef PARSER_H
-#define PARSER_H
+#ifndef SRC_PARSE_INCLUDE_PARSER_H_
+#define SRC_PARSE_INCLUDE_PARSER_H_
 
 #include "file_job.h"
 
@@ -23,7 +25,7 @@ namespace fika {
 
 // Abstract parser interface
 class parser {
-public:
+ public:
   virtual ~parser() = default;
 
   // Parse file and update the job with results
@@ -33,6 +35,6 @@ public:
   virtual const char *mime_type() const = 0;
 };
 
-} // namespace fika
+}  // namespace fika
 
-#endif
+#endif  // SRC_PARSE_INCLUDE_PARSER_H_

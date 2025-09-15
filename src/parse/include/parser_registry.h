@@ -1,6 +1,8 @@
 /*
  * This file is part of Fika.
  *
+ * Copyright [2025] Samuil Ivanov
+ *
  * Fika is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; version 2 of the License.
@@ -14,27 +16,29 @@
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef PARSER_REGISTRY_H
-#define PARSER_REGISTRY_H
+#ifndef SRC_PARSE_INCLUDE_PARSER_REGISTRY_H_
+#define SRC_PARSE_INCLUDE_PARSER_REGISTRY_H_
+
+#include <memory>
+#include <unordered_map>
 
 #include "parser.h"
-#include <unordered_map>
 
 namespace fika {
 class parser_registry {
-public:
+ public:
   parser_registry() = default;
 
   parser_registry(const parser_registry &) = delete;
   parser_registry &operator=(const parser_registry &) = delete;
 
-  parser *find_parser(MimeType mimeType); // use int
+  parser *find_parser(MimeType mimeType);  // use int
 
-private:
+ private:
   std::unordered_map<MimeType, std::unique_ptr<parser>> parsers_;
 
   std::unique_ptr<parser> create_parser(MimeType mimeType) const;
 };
-} // namespace fika
+}  // namespace fika
 
-#endif
+#endif  // SRC_PARSE_INCLUDE_PARSER_REGISTRY_H_

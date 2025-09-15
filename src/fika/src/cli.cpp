@@ -1,6 +1,8 @@
 /*
  * This file is part of Fika.
  *
+ * Copyright [2025] Samuil Ivanov
+ *
  * Fika is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; version 2 of the License.
@@ -14,11 +16,15 @@
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// clang-format off
 #include "cli.h"
-#include <boost/program_options.hpp>
+
 #include <iostream>
 #include <map>
 #include <stdexcept>
+
+#include <boost/program_options.hpp>
+// clang-format on
 
 namespace po = boost::program_options;
 
@@ -66,4 +72,4 @@ ParsedCommand parse_command_line(int argc, char *argv[]) {
   return {it->second, service};
 }
 
-} // namespace fika::cli
+}  // namespace fika::cli

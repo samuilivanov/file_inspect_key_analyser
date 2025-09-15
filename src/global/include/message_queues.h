@@ -1,6 +1,8 @@
 /*
  * This file is part of Fika.
  *
+ * Copyright [2025] Samuil Ivanov
+ *
  * Fika is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; version 2 of the License.
@@ -14,13 +16,19 @@
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MESSAGE_QUEUES_H
-#define MESSAGE_QUEUES_H
+#ifndef SRC_GLOBAL_INCLUDE_MESSAGE_QUEUES_H_
+#define SRC_GLOBAL_INCLUDE_MESSAGE_QUEUES_H_
+
+// clang-format off
+#include <stddef.h>
+
+#include <memory>
+#include <string>
 
 #include "file_job.h"
+
 #include <boost/interprocess/ipc/message_queue.hpp>
-#include <memory>
-#include <stddef.h>
+// clang-format on
 
 namespace fika {
 
@@ -30,7 +38,7 @@ struct boost_job_sender {
 
   void send(const file_job_shm &job);
 
-private:
+ private:
   boost::interprocess::message_queue mq;
 };
 
@@ -40,9 +48,9 @@ struct boost_job_receiver {
 
   file_job_shm receive();
 
-private:
+ private:
   boost::interprocess::message_queue mq;
 };
-} // namespace fika
+}  // namespace fika
 
-#endif
+#endif  // SRC_GLOBAL_INCLUDE_MESSAGE_QUEUES_H_

@@ -1,6 +1,8 @@
 /*
  * This file is part of Fika.
  *
+ * Copyright [2025] Samuil Ivanov
+ *
  * Fika is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; version 2 of the License.
@@ -14,21 +16,24 @@
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SUPERVISON_H
-#define SUPERVISON_H
+#ifndef SRC_SUPERVISOR_INCLUDE_SUPERVISOR_H_
+#define SRC_SUPERVISOR_INCLUDE_SUPERVISOR_H_
+
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
 
 #include "cmd.h"
 #include "commands.h"
 #include "ipc_queue_manager.h"
 #include "queue_descriptor.h"
 #include "worker.h"
-#include <memory>
-#include <vector>
 
 namespace fika {
 
 class supervisor {
-public:
+ public:
   using worker_factory_t = std::function<std::unique_ptr<worker>()>;
 
   explicit supervisor(std::vector<worker_factory_t> factories,
@@ -54,12 +59,12 @@ public:
 
   virtual void register_commands();
 
-private:
+ private:
   std::vector<worker_entity> workers_;
   std::shared_ptr<ipc_queue_manager> queue_mgr_;
   std::map<CommandType, std::unique_ptr<cmd>> commands_;
 };
 
-} // namespace fika
+}  // namespace fika
 
-#endif
+#endif  // SRC_SUPERVISOR_INCLUDE_SUPERVISOR_H_

@@ -1,6 +1,8 @@
 /*
  * This file is part of Fika.
  *
+ * Copyright [2025] Samuil Ivanov
+ *
  * Fika is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; version 2 of the License.
@@ -15,6 +17,10 @@
  */
 
 #include "supervisor.h"
+
+// clang-format off
+#include <chrono>
+
 #include "cmd.h"
 #include "cmd_def.h"
 #include "commands.h"
@@ -22,9 +28,10 @@
 #include "config_loader.hpp"
 #include "msg.h"
 #include "worker_configs.h"
+
 #include <boost/asio.hpp>
 #include <boost/interprocess/ipc/message_queue.hpp>
-#include <chrono>
+// clang-format on
 
 namespace {
 
@@ -33,7 +40,7 @@ std::map<std::string, std::string> binary_to_queue = {
     {"parse", PARSE_MESSAGE_QUEUE.data()},
     {"mq", QM_MESSAGE_QUEUE.data()}};
 
-} // namespace
+}  // namespace
 
 namespace fika {
 
@@ -71,7 +78,6 @@ void supervisor::stop_workers(const std::string &service_name) {
     }
     reset_queues();
   } else {
-
     for (auto &w : workers_) {
       if (w.w->name() == service_name) {
         // 1. enqueue poison pill
@@ -119,9 +125,9 @@ void supervisor::handle_command(CommandType cmd_type,
 }
 
 void supervisor::run() {
-  using namespace boost::interprocess;
-  message_queue mq(open_or_create, "fika_supervisor_mq", 100,
-                   sizeof(CommandMessage));
+  boost::interprocess::message_queue mq(boost::interprocess::open_or_create,
+                                        "fika_supervisor_mq", 100,
+                                        sizeof(CommandMessage));
 
   while (true) {
     CommandMessage msg;
@@ -137,4 +143,4 @@ void supervisor::run() {
   }
 }
 
-} // namespace fika
+}  // namespace fika

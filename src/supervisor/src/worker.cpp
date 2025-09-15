@@ -1,6 +1,8 @@
 /*
  * This file is part of Fika.
  *
+ * Copyright [2025] Samuil Ivanov
+ *
  * Fika is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; version 2 of the License.
@@ -25,13 +27,11 @@ void worker::start() {
   last_heartbeat_ = std::chrono::steady_clock::now();
 }
 void worker::stop() {
-  if (process_)
-    process_->terminate();
+  if (process_) process_->terminate();
 }
 
 void worker::wait() const {
-  if (process_)
-    process_->wait();
+  if (process_) process_->wait();
 }
 bool worker::is_alive() const { return process_ && process_->running(); }
 
@@ -44,4 +44,4 @@ void worker::restart() {
 
 std::string worker::name() const { return process_->name(); }
 
-} // namespace fika
+}  // namespace fika

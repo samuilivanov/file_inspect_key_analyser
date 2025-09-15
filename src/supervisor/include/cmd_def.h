@@ -1,6 +1,8 @@
 /*
  * This file is part of Fika.
  *
+ * Copyright [2025] Samuil Ivanov
+ *
  * Fika is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; version 2 of the License.
@@ -14,34 +16,36 @@
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef COMMAND_IMPL_H
-#define COMMAND_IMPL_H
+#ifndef SRC_SUPERVISOR_INCLUDE_CMD_DEF_H_
+#define SRC_SUPERVISOR_INCLUDE_CMD_DEF_H_
+
+#include <string>
 
 #include "cmd.h"
 #include "supervisor.h"
 
 namespace fika::detail {
 class start_command : public cmd {
-public:
+ public:
   void execute(supervisor &sup, const std::string &service_name = "") override {
-    sup.start_workers(service_name); // optionally filter by service_name
+    sup.start_workers(service_name);  // optionally filter by service_name
   }
 };
 
 class stop_command : public cmd {
-public:
+ public:
   void execute(supervisor &sup, const std::string &service_name = "") override {
-    sup.stop_workers(service_name); // you would add stop_workers method
+    sup.stop_workers(service_name);  // you would add stop_workers method
   }
 };
 
 class restart_command : public cmd {
-public:
+ public:
   void execute(supervisor &sup, const std::string &service_name = "") override {
     sup.stop_workers(service_name);
     sup.start_workers(service_name);
   }
 };
-} // namespace fika::detail
+}  // namespace fika::detail
 
-#endif
+#endif  // SRC_SUPERVISOR_INCLUDE_CMD_DEF_H_

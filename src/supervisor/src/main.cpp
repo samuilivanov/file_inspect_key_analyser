@@ -1,6 +1,8 @@
 /*
  * This file is part of Fika.
  *
+ * Copyright [2025] Samuil Ivanov
+ *
  * Fika is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; version 2 of the License.
@@ -14,6 +16,8 @@
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <boost/asio/steady_timer.hpp>
+
 #include "config.h"
 #include "config_loader.hpp"
 #include "file_job.h"
@@ -22,7 +26,6 @@
 #include "queue_descriptor.h"
 #include "supervisor.h"
 #include "worker_configs.h"
-#include <boost/asio/steady_timer.hpp>
 
 int main(int argc, char const *argv[]) {
   fika::log::msg_logger_init();

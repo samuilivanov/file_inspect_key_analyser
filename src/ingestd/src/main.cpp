@@ -1,6 +1,8 @@
 /*
  * This file is part of Fika.
  *
+ * Copyright [2025] Samuil Ivanov
+ *
  * Fika is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; version 2 of the License.
@@ -14,8 +16,9 @@
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "config.h"
 #include <filesystem>
+
+#include "config.h"
 #include "ingestd.h"
 #include "msg.h"
 int main(int argc, char const *argv[]) {

@@ -1,6 +1,8 @@
 /*
  * This file is part of Fika.
  *
+ * Copyright [2025] Samuil Ivanov
+ *
  * Fika is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; version 2 of the License.
@@ -14,16 +16,18 @@
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <file_job.h>
+
+#include <thread>
+
 #include "ipc_client.h"
 #include "msg.h"
 #include "qm.h"
 #include "service.h"
-#include <file_job.h>
-#include <thread>
 
 namespace {
 void setup() {
-  // TODO (samuil) redesign this setup function
+  // TODO(samuil): redesign this setup function
   std::filesystem::path root = FIKA_SPOOL_DIR.data();
   fika::log::log_debug("Setup starting using path: {}", root.string());
   std::array<std::string, 5> subdirs{"incomming", "new", "processing", "done",
@@ -36,10 +40,9 @@ void setup() {
   }
 }
 
-} // namespace
+}  // namespace
 
 int main(int argc, char const *argv[]) {
-
   fika::log::msg_logger_init("qm.log");
   fika::log::log_info("Starting qm");
   fika::MsgQueueReceiver<fika::file_job_shm> receiver("result_queue");

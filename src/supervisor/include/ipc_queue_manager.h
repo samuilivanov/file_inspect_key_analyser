@@ -1,6 +1,8 @@
 /*
  * This file is part of Fika.
  *
+ * Copyright [2025] Samuil Ivanov
+ *
  * Fika is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; version 2 of the License.
@@ -14,14 +16,19 @@
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef IPC_QUEUE_MANAGER_H
-#define IPC_QUEUE_MANAGER_H
+#ifndef SRC_SUPERVISOR_INCLUDE_IPC_QUEUE_MANAGER_H_
+#define SRC_SUPERVISOR_INCLUDE_IPC_QUEUE_MANAGER_H_
+
+// clang-format off
+#include <map>
+#include <string>
+#include <memory>
 
 #include "config.h"
 #include "file_job.h"
+
 #include <boost/interprocess/ipc/message_queue.hpp>
-#include <map>
-#include <string>
+// clang-format on
 
 namespace fika {
 
@@ -44,7 +51,7 @@ struct boost_queue_manager : public ipc_queue_manager {
     auto mq = std::make_shared<boost::interprocess::message_queue>(
         boost::interprocess::create_only, name.c_str(), max_messages,
         message_size);
-    queues_[name] = mq; // keep handle alive
+    queues_[name] = mq;  // keep handle alive
   }
   void send_stop_job(const std::string &queue_name) override {
     file_job_shm stop_job{};
@@ -54,8 +61,8 @@ struct boost_queue_manager : public ipc_queue_manager {
   std::map<std::string, std::shared_ptr<boost::interprocess::message_queue>>
       queues_;
 };
-} // namespace detail
+}  // namespace detail
 
-} // namespace fika
+}  // namespace fika
 
-#endif
+#endif  // SRC_SUPERVISOR_INCLUDE_IPC_QUEUE_MANAGER_H_

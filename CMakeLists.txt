@@ -197,7 +197,7 @@ if(CPPLINT)
 
     # Optional cpplint options
     set(CPPLINT_OPTIONS
-        --filter=-whitespace/line_length  # example to disable line length warnings
+        --filter=-build/include_subdir,-build/c++11
         --verbose=2
     )
 

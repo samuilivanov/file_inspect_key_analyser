@@ -1,6 +1,8 @@
 /*
  * This file is part of Fika.
  *
+ * Copyright [2025] Samuil Ivanov
+ *
  * Fika is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; version 2 of the License.
@@ -14,12 +16,16 @@
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// clang-format off
+#include <iostream>
+
 #include "cli.h"
 #include "commands.h"
 #include "config.h"
+
 #include <boost/interprocess/ipc/message_queue.hpp>
 #include <boost/process.hpp>
-#include <iostream>
+// clang-format on
 
 bool is_supervisor_running() {
   try {
@@ -41,7 +47,7 @@ boost::process::child start_supervisor() {
       std::string(BINARIES_LOC) + "/supervisor",
       boost::process::std_out > stdout,
       boost::process::std_err >
-          stderr); // assumes "supervisor" binary is on PATH
+          stderr);  // assumes "supervisor" binary is on PATH
 }
 
 void send_command(const fika::CommandMessage &msg) {
@@ -55,7 +61,7 @@ int main(int argc, char *argv[]) {
   boost::process::child sup;
   if (!is_supervisor_running()) {
     sup = start_supervisor();
-    sup.detach(); // supervisor keeps running after fika exits
+    sup.detach();  // supervisor keeps running after fika exits
 
     // give it some time to initialize IPC
     std::this_thread::sleep_for(std::chrono::seconds(1));

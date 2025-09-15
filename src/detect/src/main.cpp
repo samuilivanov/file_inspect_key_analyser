@@ -1,6 +1,8 @@
 /*
  * This file is part of Fika.
  *
+ * Copyright [2025] Samuil Ivanov
+ *
  * Fika is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; version 2 of the License.
@@ -14,31 +16,30 @@
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <detector.h>
+
+#include <csignal>
+#include <iostream>
+#include <map>
+
 #include "detectors/magic_api.h"
 #include "file_job.h"
 #include "ipc_client.h"
 #include "msg.h"
 #include "service.h"
-#include <csignal>
-#include <detector.h>
-#include <iostream>
-#include <map>
 
-// TODO (samuil) this function should be moved to another location it will
+// TODO(samuil): this function should be moved to another location it will
 // become quite large inless something else if thought of
 namespace {
 
 inline fika::MimeType mime_string_to_enum(const std::string &mimeStr) {
-  if (mimeStr == "application/pdf")
-    return fika::MimeType::PDF;
-  if (mimeStr == "text/plain")
-    return fika::MimeType::TEXT;
-  if (mimeStr == "image/jpeg")
-    return fika::MimeType::IMAGE_PNG;
+  if (mimeStr == "application/pdf") return fika::MimeType::PDF;
+  if (mimeStr == "text/plain") return fika::MimeType::TEXT;
+  if (mimeStr == "image/jpeg") return fika::MimeType::IMAGE_PNG;
   return fika::MimeType::UNKNOWN;
 }
 
-} // namespace
+}  // namespace
 
 int main(int argc, char const *argv[]) {
   fika::log::msg_logger_init();
@@ -80,7 +81,6 @@ int main(int argc, char const *argv[]) {
     service.start();
 
     service.stop();
-
   } catch (const std::exception &e) {
     std::cerr << "Service failed: " << e.what() << std::endl;
     return 1;

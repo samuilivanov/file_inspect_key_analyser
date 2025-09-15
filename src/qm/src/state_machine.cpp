@@ -1,6 +1,8 @@
 /*
  * This file is part of Fika.
  *
+ * Copyright [2025] Samuil Ivanov
+ *
  * Fika is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; version 2 of the License.
@@ -51,4 +53,4 @@ bool state_machine::apply(file_job &job, Event ev) {
   return true;
 }
 
-} // namespace fika
+}  // namespace fika

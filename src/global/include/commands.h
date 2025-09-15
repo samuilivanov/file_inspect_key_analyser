@@ -1,6 +1,8 @@
 /*
  * This file is part of Fika.
  *
+ * Copyright [2025] Samuil Ivanov
+ *
  * Fika is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; version 2 of the License.
@@ -14,8 +16,8 @@
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef COMMANDS_H
-#define COMMANDS_H
+#ifndef SRC_GLOBAL_INCLUDE_COMMANDS_H_
+#define SRC_GLOBAL_INCLUDE_COMMANDS_H_
 #include <cstring>
 #include <string>
 
@@ -39,11 +41,11 @@ struct CommandMessage {
 
 struct CommandResponse {
   bool success;
-  char message[256]; // e.g., "Service started", "Error: ..."
+  char message[256];  // e.g., "Service started", "Error: ..."
 
   CommandResponse() : success(false) { message[0] = '\0'; }
 };
 
-} // namespace fika
+}  // namespace fika
 
-#endif
+#endif  // SRC_GLOBAL_INCLUDE_COMMANDS_H_

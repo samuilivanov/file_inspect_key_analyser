@@ -1,6 +1,8 @@
 /*
  * This file is part of Fika.
  *
+ * Copyright [2025] Samuil Ivanov
+ *
  * Fika is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; version 2 of the License.
@@ -14,18 +16,19 @@
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef IMG_PARSER_H
-#define IMG_PARSER_H
+#ifndef SRC_PARSE_INCLUDE_PARSERS_IMG_PARSER_H_
+#define SRC_PARSE_INCLUDE_PARSERS_IMG_PARSER_H_
+
+#include <iostream>
 
 #include "msg.h"
 #include "parser.h"
-#include <iostream>
 namespace fika {
 
 class img_parser : public parser {
-private:
+ private:
   /* data */
-public:
+ public:
   img_parser(/* args */);
   ~img_parser();
   void parse(file_job_shm &job) override;
@@ -38,6 +41,6 @@ const char *img_parser::mime_type() const { return "img"; }
 img_parser::img_parser(/* args */) {}
 
 img_parser::~img_parser() {}
-} // namespace fika
+}  // namespace fika
 
-#endif
+#endif  // SRC_PARSE_INCLUDE_PARSERS_IMG_PARSER_H_

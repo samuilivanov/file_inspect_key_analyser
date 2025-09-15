@@ -1,6 +1,8 @@
 /*
  * This file is part of Fika.
  *
+ * Copyright [2025] Samuil Ivanov
+ *
  * Fika is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; version 2 of the License.
@@ -14,8 +16,8 @@
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef FILE_JOB_H
-#define FILE_JOB_H
+#ifndef SRC_GLOBAL_INCLUDE_FILE_JOB_H_
+#define SRC_GLOBAL_INCLUDE_FILE_JOB_H_
 
 #include <cstring>
 #include <filesystem>
@@ -31,7 +33,7 @@ enum class Status { NEW, DETECTING, PARSING, DONE, FAILED };
 enum class Event { SUBMIT, DETECTION_OK, DETECTION_FAIL, PARSE_OK, PARSE_FAIL };
 enum class JobType { DETECTOR, PARSER, NONE };
 
-// TODO (samuil) this enum should be moved to other place it will becomre quite
+// TODO(samuil): this enum should be moved to other place it will becomre quite
 // big unless something else is tought of
 enum class MimeType : int {
   UNKNOWN = 0,
@@ -83,6 +85,6 @@ struct file_job_shm {
   }
 };
 
-} // namespace fika
+}  // namespace fika
 
-#endif
+#endif  // SRC_GLOBAL_INCLUDE_FILE_JOB_H_

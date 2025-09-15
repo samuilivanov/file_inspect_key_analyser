@@ -1,6 +1,8 @@
 /*
  * This file is part of Fika.
  *
+ * Copyright [2025] Samuil Ivanov
+ *
  * Fika is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; version 2 of the License.
@@ -13,12 +15,17 @@
  * You should have received a copy of the GNU General Public License
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+// clang-format off
+#include <thread>
+
 #include "ipc_client.h"
 #include "msg.h"
 #include "parser_registry.h"
+
 #include <boost/asio/post.hpp>
 #include <boost/asio/thread_pool.hpp>
-#include <thread>
+// clang-format on
 
 namespace {
 fika::file_job_shm process_job(const fika::file_job_shm &job,
@@ -33,7 +40,7 @@ fika::file_job_shm process_job(const fika::file_job_shm &job,
   return j;
 }
 
-} // namespace
+}  // namespace
 
 int main() {
   fika::log::msg_logger_init("parser.log");
