@@ -15,7 +15,7 @@
  */
 
 #include "config.h"
-#include "filesystem"
+#include <filesystem>
 #include "ingestd.h"
 #include "msg.h"
 int main(int argc, char const *argv[]) {

@@ -27,8 +27,8 @@ struct CommandMessage {
   CommandType cmd;
   char service_name[64];
 
-  CommandMessage(CommandType c = CommandType::Start,
-                 const std::string &service = "")
+  explicit CommandMessage(CommandType c = CommandType::Start,
+                          const std::string &service = "")
       : cmd(c) {
     std::strncpy(service_name, service.c_str(), sizeof(service_name) - 1);
     service_name[sizeof(service_name) - 1] = '\0';

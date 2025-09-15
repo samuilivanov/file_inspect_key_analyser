@@ -18,6 +18,7 @@
 #define PDF_PARSER_H
 
 #include "parser.h"
+#include <iostream>
 
 namespace fika {
 

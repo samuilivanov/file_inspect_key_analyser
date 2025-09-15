@@ -52,6 +52,7 @@ int main(int argc, char const *argv[]) {
   fika::supervisor sup(factories, queues, queue_mgr);
   sup.reset_queues();
   sup.create_queues();
+  sup.register_commands();
   sup.run();
 
   return 0;

@@ -25,7 +25,7 @@
 namespace fika {
 
 struct boost_job_sender {
-  boost_job_sender(const std::string &queue_name)
+  explicit boost_job_sender(const std::string &queue_name)
       : mq(boost::interprocess::open_only, queue_name.c_str()) {}
 
   void send(const file_job_shm &job);
@@ -35,7 +35,7 @@ private:
 };
 
 struct boost_job_receiver {
-  boost_job_receiver(const std::string &queue_name)
+  explicit boost_job_receiver(const std::string &queue_name)
       : mq(boost::interprocess::open_only, queue_name.c_str()) {}
 
   file_job_shm receive();

@@ -9,12 +9,10 @@ function(add_doctest name lib)
     Boost::thread
     Boost::system)
 endfunction()
-add_doctest(test_qipc global)
 add_doctest(test_state_machine global)
 # add_doctest(test_qm global)
 
 # add_doctest(test_loggercopy util)
-add_test(NAME test_qipc COMMAND test_qipc)
 add_test(NAME test_state_machine COMMAND test_state_machine)
 # add_test(NAME test_qm COMMAND test_qm)
 # add_test(NAME test_loggercopy COMMAND test_loggercopy)

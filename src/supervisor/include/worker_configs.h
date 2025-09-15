@@ -40,7 +40,7 @@ struct worker_configs {
 
   static worker_configs fromJson(const nlohmann::json &j) {
     worker_configs cfgs;
-    for (auto &w : j) {
+    for (const auto &w : j) {
       cfgs.workers.push_back(worker_config::fromJson(w));
     }
     return cfgs;

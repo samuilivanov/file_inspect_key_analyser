@@ -29,13 +29,11 @@ namespace fika {
 
 template <typename SendType, typename RecvType> class ipc_client {
 public:
-  ipc_client(const std::string &send_queue, const std::string &recv_queue) {
-    // Only open existing queues
-    mq_send_ = std::make_unique<boost::interprocess::message_queue>(
-        boost::interprocess::open_only, send_queue.c_str());
-    mq_recv_ = std::make_unique<boost::interprocess::message_queue>(
-        boost::interprocess::open_only, recv_queue.c_str());
-  }
+  ipc_client(const std::string &send_queue, const std::string &recv_queue)
+      : mq_send_(std::make_unique<boost::interprocess::message_queue>(
+            boost::interprocess::open_only, send_queue.c_str())),
+        mq_recv_(std::make_unique<boost::interprocess::message_queue>(
+            boost::interprocess::open_only, recv_queue.c_str())) {}
 
   bool try_receive(RecvType &msg) {
     size_t recv_size;
@@ -54,14 +52,14 @@ public:
   }
 
 private:
-  std::unique_ptr<boost::interprocess::message_queue> mq_recv_;
   std::unique_ptr<boost::interprocess::message_queue> mq_send_;
+  std::unique_ptr<boost::interprocess::message_queue> mq_recv_;
 };
 
 // Assume your Boost MQ wrappers
 template <typename Job> class MsgQueueReceiver {
 public:
-  MsgQueueReceiver(const std::string &queue_name)
+  explicit MsgQueueReceiver(const std::string &queue_name)
       : mq_recv_(boost::interprocess::open_only, queue_name.c_str()) {}
   void receive(Job &job) {
     size_t recv_size;
@@ -75,11 +73,9 @@ private:
 
 template <typename Result> class MsgQueueSender {
 public:
-  MsgQueueSender(const std::string &queue_name)
+  explicit MsgQueueSender(const std::string &queue_name)
       : mq_send_(boost::interprocess::open_only, queue_name.c_str()) {}
-  void send(const Result &result) {
-    mq_send_.send(&result, sizeof(Result), 0);
-  }
+  void send(const Result &result) { mq_send_.send(&result, sizeof(Result), 0); }
 
 private:
   boost::interprocess::message_queue mq_send_;

@@ -52,8 +52,9 @@ public:
 
   virtual void monitor_once();
 
-private:
   virtual void register_commands();
+
+private:
   std::vector<worker_entity> workers_;
   std::shared_ptr<ipc_queue_manager> queue_mgr_;
   std::map<CommandType, std::unique_ptr<cmd>> commands_;

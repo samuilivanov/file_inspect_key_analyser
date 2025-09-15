@@ -24,7 +24,7 @@ namespace {
 fika::file_job_shm process_job(const fika::file_job_shm &job,
                                fika::parser_registry &parsers) {
   fika::file_job_shm j = job;
-  if (auto parser = parsers.find_parser(job.mime)) {
+  if (parsers.find_parser(job.mime)) {
     fika::log::log_info("in parsers");
     j.status = fika::Status::DONE;
   } else {

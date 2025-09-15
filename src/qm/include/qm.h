@@ -29,19 +29,6 @@ namespace fika {
 class qm {
 
 public:
-  void setup() {
-    // TODO (samuil) redesign this setup function
-    std::filesystem::path root = FIKA_SPOOL_DIR.data();
-    log::log_debug("Setup starting using path: {}", root.string());
-    std::array<std::string, 5> subdirs{"incomming", "new", "processing", "done",
-                                       "failed"};
-    for (const auto &d : subdirs) {
-      std::filesystem::path dir = root / d;
-      if (std::filesystem::create_directories(dir)) {
-        log::log_info(std::string("created dir: ") + dir.string());
-      }
-    }
-  }
 
   std::pair<std::string, file_job_shm> add_job(file_job job) {
     job.status = Status::NEW;
@@ -106,20 +93,20 @@ private:
   state_machine sm;
   std::vector<file_job> jobs_in_memory;
 
-  void scan_new_files() {
-    std::filesystem::path root = FIKA_SPOOL_NEW_DIR;
-    log::log_debug("Scan for file in new using path: {}", root.string());
+  // void scan_new_files() {
+  //   std::filesystem::path root = FIKA_SPOOL_NEW_DIR;
+  //   log::log_debug("Scan for file in new using path: {}", root.string());
 
-    for (const auto &f : std::filesystem::directory_iterator(root)) {
-      if (std::filesystem::is_regular_file(f)) {
-        file_job fjob;
-        fjob.id = "somerandomid"; // TODO (samuil) a id generator should be
-                                  // implemented
-        fjob.path = f.path().string();
-        add_job(fjob);
-      }
-    }
-  }
+  //   for (const auto &f : std::filesystem::directory_iterator(root)) {
+  //     if (std::filesystem::is_regular_file(f)) {
+  //       file_job fjob;
+  //       fjob.id = "somerandomid"; // TODO (samuil) a id generator should be
+  //                                 // implemented
+  //       fjob.path = f.path().string();
+  //       add_job(fjob);
+  //     }
+  //   }
+  // }
 };
 } // namespace fika
 

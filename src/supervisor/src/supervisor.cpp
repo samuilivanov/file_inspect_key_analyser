@@ -41,9 +41,8 @@ supervisor::supervisor(std::vector<worker_factory_t> factories,
                        std::vector<queue_descriptor> queues,
                        std::shared_ptr<ipc_queue_manager> queue_mgr)
     : queues_(queues), queue_mgr_(queue_mgr) {
-  for (auto &f : factories)
+  for (const auto &f : factories)
     workers_.push_back({f(), WorkerState::Stopped});
-  register_commands();
 }
 
 void supervisor::start_workers(const std::string &service_name) {
@@ -124,8 +123,7 @@ void supervisor::run() {
   message_queue mq(open_or_create, "fika_supervisor_mq", 100,
                    sizeof(CommandMessage));
 
-  bool stop_flag = false;
-  while (!stop_flag) {
+  while (true) {
     CommandMessage msg;
     std::size_t recv_size;
     unsigned int priority;

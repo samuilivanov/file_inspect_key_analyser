@@ -21,6 +21,23 @@
 #include <file_job.h>
 #include <thread>
 
+namespace {
+void setup() {
+  // TODO (samuil) redesign this setup function
+  std::filesystem::path root = FIKA_SPOOL_DIR.data();
+  fika::log::log_debug("Setup starting using path: {}", root.string());
+  std::array<std::string, 5> subdirs{"incomming", "new", "processing", "done",
+                                     "failed"};
+  for (const auto &d : subdirs) {
+    std::filesystem::path dir = root / d;
+    if (std::filesystem::create_directories(dir)) {
+      fika::log::log_info(std::string("created dir: ") + dir.string());
+    }
+  }
+}
+
+} // namespace
+
 int main(int argc, char const *argv[]) {
 
   fika::log::msg_logger_init("qm.log");
@@ -38,7 +55,7 @@ int main(int argc, char const *argv[]) {
                       "job_queue_detector"));
 
   fika::qm q;
-  q.setup();
+  setup();
 
   auto handler = [&q](const fika::file_job_shm &job)
       -> std::pair<std::string, fika::file_job_shm> {

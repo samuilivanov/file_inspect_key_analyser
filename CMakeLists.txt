@@ -140,9 +140,13 @@ file(GLOB_RECURSE HEADER_FILES
                 -I ${CMAKE_CURRENT_SOURCE_DIR}/src
                 -I ${CMAKE_CURRENT_SOURCE_DIR}/src/detect/include
         -I ${CMAKE_CURRENT_SOURCE_DIR}/src/qm/include
-        -I ${CMAKE_CURRENT_SOURCE_DIR}/src/parser/include
+        -I ${CMAKE_CURRENT_SOURCE_DIR}/src/parse/include
         -I ${CMAKE_CURRENT_SOURCE_DIR}/src/supervisor/include
         -I ${CMAKE_CURRENT_SOURCE_DIR}/src/ingestd/include
+        -I ${CMAKE_CURRENT_SOURCE_DIR}/src/global/include
+        -I ${CMAKE_CURRENT_SOURCE_DIR}/src/util/include
+        -I ${CMAKE_CURRENT_SOURCE_DIR}/src/fika/include
+        -I ${CMAKE_CURRENT_SOURCE_DIR}/build
                 ${CPP_FILES} -I ${HEADER_FILES}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         COMMENT "Running cppcheck..."
@@ -166,6 +170,41 @@ file(GLOB_RECURSE HEADER_FILES
         COMMAND ${CLANG_TIDY} -p=${CMAKE_BINARY_DIR} ${CPP_FILES} ${HEADER_FILES}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         COMMENT "Running clang-tidy on all source files..."
+        VERBATIM
+    )
+endif()
+
+# Find Python interpreter
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
+
+# Find cpplint script
+find_program(CPPLINT cpplint
+    HINTS ${Python3_EXECUTABLE_DIR} ENV PATH
+)
+
+if(CPPLINT)
+    # Reuse the same file lists as cppcheck
+    file(GLOB_RECURSE CPP_FILES
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/*/src/*.cpp"
+    )
+
+    file(GLOB_RECURSE HEADER_FILES
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/*/include/*.h"
+    )
+
+    # Combine files
+    set(CPPLINT_FILES ${CPP_FILES} ${HEADER_FILES})
+
+    # Optional cpplint options
+    set(CPPLINT_OPTIONS
+        --filter=-whitespace/line_length  # example to disable line length warnings
+        --verbose=2
+    )
+
+    add_custom_target(cpplint
+        COMMAND ${Python3_EXECUTABLE} ${CPPLINT} ${CPPLINT_OPTIONS} ${CPPLINT_FILES}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Running cpplint for C++ style checking..."
         VERBATIM
     )
 endif()
