@@ -32,7 +32,7 @@
 
 // TODO(samuil): move this to util
 namespace {
-void generate_unique_id(char id[64]) {
+void generate_unique_id(char (&id)[64]) {
   // Timestamp in milliseconds
   auto now = std::chrono::system_clock::now();
   auto t = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -40,12 +40,12 @@ void generate_unique_id(char id[64]) {
                .count();
 
   // Random 4-digit hex
-  static thread_local std::mt19937 rng(std::random_device{}());
+  static thread_local std::mt19937 rng(std::random_device {}());
   std::uniform_int_distribution<int> dist(0, 0xffff);
   int rand_hex = dist(rng);
 
   // Format: job_<timestamp>_<rand>
-  std::snprintf(id, 64, "job_%lld_%04x", static_cast<long long>(t), rand_hex);
+  std::snprintf(id, sizeof(id), "job_%ld_%04x", t, rand_hex);
 }
 
 }  // namespace

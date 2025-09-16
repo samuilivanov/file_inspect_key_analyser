@@ -118,7 +118,7 @@ void supervisor::handle_command(CommandType cmd_type,
                                 const std::string &service_name) {
   auto it = commands_.find(cmd_type);
   if (it != commands_.end()) {
-    it->second->execute(*this, service_name);
+    it->second->execute(this, service_name);
   } else {
     log::log_info("Unknown command");
   }

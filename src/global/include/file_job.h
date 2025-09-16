@@ -27,24 +27,12 @@
 
 namespace fika {
 
-// Max sizes
-constexpr std::size_t MAX_ID_SIZE = 64;
-constexpr std::size_t MAX_PATH_SIZE = 256;
+constexpr size_t MAX_ID_SIZE = 64;
+constexpr size_t MAX_PATH_SIZE = 256;
 
 enum class Status { NEW, DETECTING, PARSING, DONE, FAILED };
 enum class Event { SUBMIT, DETECTION_OK, DETECTION_FAIL, PARSE_OK, PARSE_FAIL };
 enum class JobType { DETECTOR, PARSER, NONE };
-
-// // TODO(samuil): this enum should be moved to other place it will becomre
-// quite
-// // big unless something else is tought of
-// enum class MimeType : int {
-//   UNKNOWN = 0,
-//   PDF = 1,
-//   TEXT = 2,
-//   IMAGE_PNG = 3,
-//   // Add more as needed
-// };
 
 struct file_job {
   std::string id;
@@ -60,19 +48,28 @@ struct file_job_shm {
   char id[MAX_ID_SIZE] = {};
   char path[MAX_PATH_SIZE] = {};
   int attempts = 0;
-  Status status;
-  JobType type;
-  mime::Type mime;
+  Status status{};
+  JobType type{};
+  mime::Type mime{};
   bool stop = false;
 
-  void from_file_job(const file_job &fj) {
+  // copy from file_job, returns false if truncation occurred
+  bool from_file_job(const file_job& fj) {
+    bool truncated = false;
+
+    if (fj.id.size() >= MAX_ID_SIZE) truncated = true;
+    if (fj.path.string().size() >= MAX_PATH_SIZE) truncated = true;
+
     std::strncpy(id, fj.id.c_str(), MAX_ID_SIZE - 1);
     std::strncpy(path, fj.path.string().c_str(), MAX_PATH_SIZE - 1);
+
     attempts = fj.attempts;
     status = fj.status;
     type = fj.type;
     mime = fj.mime;
     stop = fj.stop;
+
+    return !truncated;
   }
 
   file_job to_file_job() const {

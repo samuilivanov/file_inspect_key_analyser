@@ -57,7 +57,9 @@ class qm {
       case Status::DETECTING:
         return handle_event(&it->second, Event::DETECTION_OK);
       case Status::FAILED:
-        return handle_event(&it->second, Event::DETECTION_FAIL);
+        log::log_info("Job {} FAILED", it->second.id);
+        return {"fail", job};
+
       case Status::PARSING:
         return handle_event(&it->second, Event::PARSE_OK);
         break;

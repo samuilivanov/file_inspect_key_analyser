@@ -22,6 +22,7 @@
 #include "ipc_client.h"
 #include "msg.h"
 #include "parser_registry.h"
+#include "service.h"
 
 #include <boost/asio/post.hpp>
 #include <boost/asio/thread_pool.hpp>
@@ -43,25 +44,39 @@ fika::file_job_shm process_job(const fika::file_job_shm &job,
 }  // namespace
 
 int main() {
-  fika::log::msg_logger_init("parser.log");
-
+  fika::log::msg_logger_init();
   fika::log::log_info("Starting parser service");
+  try {
+    std::map<std::string,
+             std::shared_ptr<fika::MsgQueueSender<fika::file_job_shm>>>
+        senders;
+    senders.emplace("qm",
+                    std::make_shared<fika::MsgQueueSender<fika::file_job_shm>>(
+                        "result_queue"));
+    fika::parser_registry parsers;
 
-  fika::ipc_client<fika::file_job_shm, fika::file_job_shm> ipc(
-      "result_queue", "job_queue_parse");
-  boost::asio::thread_pool pool_{std::thread::hardware_concurrency()};
+    // The actual work to be done per job
+    auto handler = [&parsers](const fika::file_job_shm &job)
+        -> std::pair<std::string, fika::file_job_shm> {
+      std::cout << "Processing job " << job.id << "\n";
+      auto j = process_job(job, &parsers);
 
-  fika::parser_registry parsers;
+      return std::make_pair("qm", j);
+    };
 
-  while (true) {
-    fika::file_job_shm job{};
-    ipc.receive_job(job);
-    fika::log::log_info("receive job id: {}", job.id);
-    boost::asio::post(pool_, [job_ = job, &parsers, &ipc] {
-      auto result = process_job(job_, &parsers);
-      ipc.send_result(result);
-    });
+    fika::Service<fika::file_job_shm, fika::file_job_shm> service(
+        std::make_unique<fika::MsgQueueReceiver<fika::file_job_shm>>(
+            "job_queue_parse"),
+        senders, handler);
+
+    service.start();
+
+    service.stop();
+  } catch (const std::exception &e) {
+    std::cerr << "Service failed: " << e.what() << std::endl;
+    return 1;
   }
+  fika::log::log_info("Stopping parse service");
 
   return 0;
 }
