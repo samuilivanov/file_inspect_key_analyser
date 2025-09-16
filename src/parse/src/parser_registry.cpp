@@ -18,25 +18,27 @@
 
 #include "parser_registry.h"
 
+#include "mime_type.h"
 #include "parser.h"
 #include "parsers.h"
+
 namespace fika {
 
 std::unique_ptr<parser> parser_registry::create_parser(
-    MimeType mimeType) const {
+    mime::Type mimeType) const {
   switch (mimeType) {
-    case MimeType::PDF:
+    case mime::Type::Pdf:
       return std::make_unique<pdf_parser>();
-    case MimeType::TEXT:
+    case mime::Type::TextPlain:
       return std::make_unique<text_parser>();
-    case MimeType::IMAGE_PNG:
+    case mime::Type::ImageJpeg:
       return std::make_unique<img_parser>();
     default:
       return nullptr;
   }
 }
 
-parser *parser_registry::find_parser(MimeType mimeType) {
+parser *parser_registry::find_parser(mime::Type mimeType) {
   auto it = parsers_.find(mimeType);
   if (it != parsers_.end()) return it->second.get();
 

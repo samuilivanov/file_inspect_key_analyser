@@ -22,6 +22,7 @@
 #include <memory>
 #include <unordered_map>
 
+#include "mime_type.h"
 #include "parser.h"
 
 namespace fika {
@@ -32,12 +33,12 @@ class parser_registry {
   parser_registry(const parser_registry &) = delete;
   parser_registry &operator=(const parser_registry &) = delete;
 
-  parser *find_parser(MimeType mimeType);  // use int
+  parser *find_parser(mime::Type mimeType);  // use int
 
  private:
-  std::unordered_map<MimeType, std::unique_ptr<parser>> parsers_;
+  std::unordered_map<mime::Type, std::unique_ptr<parser>> parsers_;
 
-  std::unique_ptr<parser> create_parser(MimeType mimeType) const;
+  std::unique_ptr<parser> create_parser(mime::Type mimeType) const;
 };
 }  // namespace fika
 

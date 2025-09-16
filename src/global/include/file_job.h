@@ -23,6 +23,8 @@
 #include <filesystem>
 #include <string>
 
+#include "mime_type.h"
+
 namespace fika {
 
 // Max sizes
@@ -33,15 +35,16 @@ enum class Status { NEW, DETECTING, PARSING, DONE, FAILED };
 enum class Event { SUBMIT, DETECTION_OK, DETECTION_FAIL, PARSE_OK, PARSE_FAIL };
 enum class JobType { DETECTOR, PARSER, NONE };
 
-// TODO(samuil): this enum should be moved to other place it will becomre quite
-// big unless something else is tought of
-enum class MimeType : int {
-  UNKNOWN = 0,
-  PDF = 1,
-  TEXT = 2,
-  IMAGE_PNG = 3,
-  // Add more as needed
-};
+// // TODO(samuil): this enum should be moved to other place it will becomre
+// quite
+// // big unless something else is tought of
+// enum class MimeType : int {
+//   UNKNOWN = 0,
+//   PDF = 1,
+//   TEXT = 2,
+//   IMAGE_PNG = 3,
+//   // Add more as needed
+// };
 
 struct file_job {
   std::string id;
@@ -49,7 +52,7 @@ struct file_job {
   int attempts = 0;
   Status status;
   JobType type;
-  MimeType mime;
+  mime::Type mime;
   bool stop = false;
 };
 
@@ -59,7 +62,7 @@ struct file_job_shm {
   int attempts = 0;
   Status status;
   JobType type;
-  MimeType mime;
+  mime::Type mime;
   bool stop = false;
 
   void from_file_job(const file_job &fj) {

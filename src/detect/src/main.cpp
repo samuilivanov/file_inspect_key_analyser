@@ -25,21 +25,9 @@
 #include "detectors/magic_api.h"
 #include "file_job.h"
 #include "ipc_client.h"
+#include "mime_type.h"
 #include "msg.h"
 #include "service.h"
-
-// TODO(samuil): this function should be moved to another location it will
-// become quite large inless something else if thought of
-namespace {
-
-inline fika::MimeType mime_string_to_enum(const std::string &mimeStr) {
-  if (mimeStr == "application/pdf") return fika::MimeType::PDF;
-  if (mimeStr == "text/plain") return fika::MimeType::TEXT;
-  if (mimeStr == "image/jpeg") return fika::MimeType::IMAGE_PNG;
-  return fika::MimeType::UNKNOWN;
-}
-
-}  // namespace
 
 int main(int argc, char const *argv[]) {
   fika::log::msg_logger_init();
@@ -65,7 +53,8 @@ int main(int argc, char const *argv[]) {
       std::cout << "Processing job " << job.id << "\n";
       fika::file_job_shm r = job;
       auto result = d.detect_file(job.path);
-      r.mime = mime_string_to_enum(result.mime_type);
+      fika::mime::Type mime_info = fika::mime::map_type(result.mime_type);
+      r.mime = mime_info;
       fika::log::log_info("Detect file: {}: {}", job.path, result.mime_type);
       if (result.mime_type != "application/octet-stream") {
         r.status = fika::Status::DETECTING;
