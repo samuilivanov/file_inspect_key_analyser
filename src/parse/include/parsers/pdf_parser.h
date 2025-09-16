@@ -31,12 +31,12 @@ class pdf_parser : public parser {
  public:
   pdf_parser(/* args */);
   ~pdf_parser();
-  void parse(file_job_shm &job) override;
+  void parse(const file_job_shm &job) override;
 
   const char *mime_type() const override;
 };
 
-void pdf_parser::parse(file_job_shm &job) { std::cout << "in pdf parse"; }
+void pdf_parser::parse(const file_job_shm &job) { std::cout << "in pdf parse"; }
 
 const char *pdf_parser::mime_type() const { return "pdf"; }
 

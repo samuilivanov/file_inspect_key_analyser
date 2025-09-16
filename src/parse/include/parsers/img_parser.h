@@ -31,11 +31,11 @@ class img_parser : public parser {
  public:
   img_parser(/* args */);
   ~img_parser();
-  void parse(file_job_shm &job) override;
+  void parse(const file_job_shm &job) override;
 
   const char *mime_type() const override;
 };
-void img_parser::parse(file_job_shm &job) { log::log_info("test img"); }
+void img_parser::parse(const file_job_shm &job) { log::log_info("test img"); }
 
 const char *img_parser::mime_type() const { return "img"; }
 img_parser::img_parser(/* args */) {}

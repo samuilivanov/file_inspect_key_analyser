@@ -45,7 +45,6 @@ void setup() {
 int main(int argc, char const *argv[]) {
   fika::log::msg_logger_init("qm.log");
   fika::log::log_info("Starting qm");
-  fika::MsgQueueReceiver<fika::file_job_shm> receiver("result_queue");
 
   std::map<std::string,
            std::shared_ptr<fika::MsgQueueSender<fika::file_job_shm>>>
@@ -66,7 +65,9 @@ int main(int argc, char const *argv[]) {
   };
 
   fika::Service<fika::file_job_shm, fika::file_job_shm> service(
-      receiver, senders, handler);
+      std::make_unique<fika::MsgQueueReceiver<fika::file_job_shm>>(
+          "result_queue"),
+      senders, handler);
 
   service.start();
 

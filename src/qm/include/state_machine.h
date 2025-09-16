@@ -33,7 +33,7 @@ struct state_machine {
 
   state_machine();
 
-  bool apply(file_job &job, Event ev);
+  bool apply(file_job *job, Event ev);
 };
 }  // namespace fika
 

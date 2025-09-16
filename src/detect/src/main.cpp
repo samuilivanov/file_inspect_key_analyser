@@ -39,7 +39,6 @@ int main(int argc, char const *argv[]) {
     senders.emplace("qm",
                     std::make_shared<fika::MsgQueueSender<fika::file_job_shm>>(
                         "result_queue"));
-    fika::MsgQueueReceiver<fika::file_job_shm> receiver("job_queue_detector");
 
     std::vector<std::unique_ptr<fika::file_detector>> dets;
 
@@ -65,7 +64,9 @@ int main(int argc, char const *argv[]) {
     };
 
     fika::Service<fika::file_job_shm, fika::file_job_shm> service(
-        receiver, senders, handler);
+        std::make_unique<fika::MsgQueueReceiver<fika::file_job_shm>>(
+            "job_queue_detector"),
+        senders, handler);
 
     service.start();
 

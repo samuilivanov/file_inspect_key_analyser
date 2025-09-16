@@ -40,7 +40,7 @@ void generate_unique_id(char id[64]) {
                .count();
 
   // Random 4-digit hex
-  static thread_local std::mt19937 rng(std::random_device{ }());
+  static thread_local std::mt19937 rng(std::random_device{}());
   std::uniform_int_distribution<int> dist(0, 0xffff);
   int rand_hex = dist(rng);
 

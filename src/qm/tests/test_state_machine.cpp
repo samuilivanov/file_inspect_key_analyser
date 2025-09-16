@@ -15,9 +15,10 @@
  */
 
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
+
 #include "file_job.h"
 #include "state_machine.h"
-#include <doctest/doctest.h>
 
 using namespace fika;
 
@@ -29,19 +30,19 @@ TEST_CASE("state_machine applies valid transitions") {
   job.id = "job1";
 
   // NEW + SUBMIT => DETECTING
-  bool applied = sm.apply(job, Event::SUBMIT);
+  bool applied = sm.apply(&job, Event::SUBMIT);
   REQUIRE(applied);
   REQUIRE(job.status == Status::DETECTING);
   REQUIRE(job.type == JobType::DETECTOR);
 
   // DETECTING + DETECTION_OK => PARSING
-  applied = sm.apply(job, Event::DETECTION_OK);
+  applied = sm.apply(&job, Event::DETECTION_OK);
   REQUIRE(applied);
   REQUIRE(job.status == Status::PARSING);
   REQUIRE(job.type == JobType::PARSER);
 
   // PARSING + PARSE_OK => DONE
-  applied = sm.apply(job, Event::PARSE_OK);
+  applied = sm.apply(&job, Event::PARSE_OK);
   REQUIRE(applied);
   REQUIRE(job.status == Status::DONE);
 }
@@ -53,7 +54,7 @@ TEST_CASE("state_machine handles failure transitions") {
   job1.status = Status::DETECTING;
   job1.type = JobType::DETECTOR;
   job1.id = "job2";
-  bool applied = sm.apply(job1, Event::DETECTION_FAIL);
+  bool applied = sm.apply(&job1, Event::DETECTION_FAIL);
   REQUIRE(applied);
   REQUIRE(job1.status == Status::FAILED);
 
@@ -61,7 +62,7 @@ TEST_CASE("state_machine handles failure transitions") {
   job2.status = Status::PARSING;
   job2.type = JobType::PARSER;
   job2.id = "job3";
-  applied = sm.apply(job2, Event::PARSE_FAIL);
+  applied = sm.apply(&job2, Event::PARSE_FAIL);
   REQUIRE(applied);
   REQUIRE(job2.status == Status::FAILED);
 }
@@ -74,7 +75,7 @@ TEST_CASE("state_machine returns false for unknown transitions") {
   job.type = JobType::DETECTOR;
   job.id = "job4";
   // PARSE_OK from NEW is invalid
-  bool applied = sm.apply(job, Event::PARSE_OK);
+  bool applied = sm.apply(&job, Event::PARSE_OK);
   REQUIRE(!applied);
   REQUIRE(job.status == Status::NEW);
 }

@@ -27,23 +27,23 @@
 namespace fika::detail {
 class start_command : public cmd {
  public:
-  void execute(supervisor &sup, const std::string &service_name = "") override {
-    sup.start_workers(service_name);  // optionally filter by service_name
+  void execute(supervisor *sup, const std::string &service_name = "") override {
+    sup->start_workers(service_name);  // optionally filter by service_name
   }
 };
 
 class stop_command : public cmd {
  public:
-  void execute(supervisor &sup, const std::string &service_name = "") override {
-    sup.stop_workers(service_name);  // you would add stop_workers method
+  void execute(supervisor *sup, const std::string &service_name = "") override {
+    sup->stop_workers(service_name);  // you would add stop_workers method
   }
 };
 
 class restart_command : public cmd {
  public:
-  void execute(supervisor &sup, const std::string &service_name = "") override {
-    sup.stop_workers(service_name);
-    sup.start_workers(service_name);
+  void execute(supervisor *sup, const std::string &service_name = "") override {
+    sup->stop_workers(service_name);
+    sup->start_workers(service_name);
   }
 };
 }  // namespace fika::detail

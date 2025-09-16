@@ -20,8 +20,8 @@
 #define SRC_QM_INCLUDE_QM_H_
 
 #include <string>
+#include <unordered_map>
 #include <utility>
-#include <vector>
 
 #include "config.h"
 #include "file_job.h"
@@ -35,19 +35,19 @@ class qm {
  public:
   std::pair<std::string, file_job_shm> add_job(file_job job) {
     job.status = Status::NEW;
-    jobs_in_memory.push_back(job);
+    jobs_in_memory[job.id] = job;
     log::log_info("Registed job {}", job.id);
 
     // Submit event drives the FSM
-    return handle_event(jobs_in_memory.back(), Event::SUBMIT);
+    return handle_event(&job, Event::SUBMIT);
   }
 
   std::pair<std::string, file_job_shm> process_results(
       const file_job_shm &job) {
-    auto it = std::find_if(jobs_in_memory.begin(), jobs_in_memory.end(),
-                           [&](const file_job &j) { return j.id == job.id; });
-
-    if (it == jobs_in_memory.end()) {
+    auto it = jobs_in_memory.find(job.id);
+    if (it != jobs_in_memory.end()) {
+      it->second = job.to_file_job();  // replace value
+    } else {
       log::log_info("adding new job and return");
       return add_job(job.to_file_job());
     }
@@ -55,16 +55,14 @@ class qm {
     // FSM event mapping
     switch (job.status) {
       case Status::DETECTING:
-        it->mime = job.mime;  // TODO(samuil): the in memory object should
-                              // be updated not thsi bullshit
-        return handle_event(*it, Event::DETECTION_OK);
+        return handle_event(&it->second, Event::DETECTION_OK);
       case Status::FAILED:
-        return handle_event(*it, Event::DETECTION_FAIL);
+        return handle_event(&it->second, Event::DETECTION_FAIL);
       case Status::PARSING:
-        return handle_event(*it, Event::PARSE_OK);
+        return handle_event(&it->second, Event::PARSE_OK);
         break;
       case Status::DONE:
-        log::log_info("Job {} is fully DONE", it->id);
+        log::log_info("Job {} is fully DONE", it->second.id);
         break;
       default:
         break;
@@ -72,13 +70,13 @@ class qm {
     return {"done", file_job_shm{}};
   }
 
-  std::pair<std::string, file_job_shm> handle_event(file_job &job, Event ev) {
+  std::pair<std::string, file_job_shm> handle_event(file_job *job, Event ev) {
     file_job_shm j{};
     if (sm.apply(job, ev)) {
-      j.from_file_job(job);
+      j.from_file_job(*job);
     }
     std::string qname;
-    switch (job.type) {
+    switch (job->type) {
       case JobType::DETECTOR:
         qname = "detect";
         break;
@@ -94,7 +92,7 @@ class qm {
 
  private:
   state_machine sm;
-  std::vector<file_job> jobs_in_memory;
+  std::unordered_map<std::string, file_job> jobs_in_memory;
 
   // void scan_new_files() {
   //   std::filesystem::path root = FIKA_SPOOL_NEW_DIR;

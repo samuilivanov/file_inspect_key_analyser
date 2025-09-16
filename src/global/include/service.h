@@ -45,11 +45,11 @@ class Service {
   using JobHandler = std::function<std::pair<std::string, Result>(const Job &)>;
 
   Service(
-      MsgQueueReceiver<Job> &receiver,
+      std::unique_ptr<MsgQueueReceiver<Job>> receiver,
       std::map<std::string, std::shared_ptr<MsgQueueSender<Result>>> senders,
       JobHandler handler,
       std::size_t threadCount = boost::thread::hardware_concurrency())
-      : receiver_(receiver),
+      : receiver_(std::move(receiver)),
         senders_(senders),
         handler_(std::move(handler)),
         pool_(threadCount),
@@ -72,7 +72,7 @@ class Service {
   void receiveLoop() {
     while (running_) {
       Job job{};
-      receiver_.receive(job);
+      receiver_->receive(job);
       // Detect poison pill
       if (job.stop) {
         log::log_info("received poison pill - stopping");
@@ -94,7 +94,7 @@ class Service {
     pool_.join();
   }
 
-  MsgQueueReceiver<Job> &receiver_;
+  std::unique_ptr<MsgQueueReceiver<Job>> receiver_;
   std::map<std::string, std::shared_ptr<MsgQueueSender<Result>>> senders_;
   JobHandler handler_;
   boost::asio::thread_pool pool_;

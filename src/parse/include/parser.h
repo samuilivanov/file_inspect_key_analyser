@@ -29,7 +29,7 @@ class parser {
   virtual ~parser() = default;
 
   // Parse file and update the job with results
-  virtual void parse(file_job_shm &job) = 0;
+  virtual void parse(const file_job_shm &job) = 0;
 
   // Returns mime type this parser can handle
   virtual const char *mime_type() const = 0;

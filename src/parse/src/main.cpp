@@ -29,9 +29,9 @@
 
 namespace {
 fika::file_job_shm process_job(const fika::file_job_shm &job,
-                               fika::parser_registry &parsers) {
+                               fika::parser_registry *parsers) {
   fika::file_job_shm j = job;
-  if (parsers.find_parser(job.mime)) {
+  if (parsers->find_parser(job.mime)) {
     fika::log::log_info("in parsers");
     j.status = fika::Status::DONE;
   } else {
@@ -58,7 +58,7 @@ int main() {
     ipc.receive_job(job);
     fika::log::log_info("receive job id: {}", job.id);
     boost::asio::post(pool_, [job_ = job, &parsers, &ipc] {
-      auto result = process_job(job_, parsers);
+      auto result = process_job(job_, &parsers);
       ipc.send_result(result);
     });
   }

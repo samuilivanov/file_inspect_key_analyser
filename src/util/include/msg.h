@@ -19,7 +19,12 @@
 #ifndef SRC_UTIL_INCLUDE_MSG_H_
 #define SRC_UTIL_INCLUDE_MSG_H_
 
+// clang-format off
+#include <source_location>
 #include <fmt/core.h>
+
+#include <memory>
+#include <string>
 
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/current_process_name.hpp>
@@ -32,9 +37,8 @@
 #include <boost/log/support/date_time.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
-#include <memory>
-#include <source_location>
-#include <string>
+// clang-format on
+
 namespace fika::log {
 
 namespace logging = boost::log;

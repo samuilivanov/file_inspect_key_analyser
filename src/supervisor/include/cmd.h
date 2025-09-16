@@ -25,7 +25,7 @@ class supervisor;
 class cmd {
  public:
   virtual ~cmd() = default;
-  virtual void execute(supervisor &sup,
+  virtual void execute(supervisor *sup,
                        const std::string &service_name = "") = 0;
 };
 

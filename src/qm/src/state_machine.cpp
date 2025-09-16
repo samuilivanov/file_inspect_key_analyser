@@ -43,13 +43,13 @@ state_machine::state_machine() {
   };
 }
 
-bool state_machine::apply(file_job &job, Event ev) {
-  auto key = std::make_pair(job.status, ev);
+bool state_machine::apply(file_job *job, Event ev) {
+  auto key = std::make_pair(job->status, ev);
   auto it = transitions.find(key);
   if (it == transitions.end()) {
     return false;
   }
-  job.status = it->second(job);
+  job->status = it->second(*job);
   return true;
 }
 

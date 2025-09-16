@@ -29,11 +29,13 @@ class text_parser : public parser {
  public:
   text_parser(/* args */);
   ~text_parser();
-  void parse(file_job_shm &job) override;
+  void parse(const file_job_shm &job) override;
 
   const char *mime_type() const override;
 };
-void text_parser::parse(file_job_shm &job) { std::cout << "in txt parse"; }
+void text_parser::parse(const file_job_shm &job) {
+  std::cout << "in txt parse";
+}
 
 const char *text_parser::mime_type() const { return "txt"; }
 text_parser::text_parser(/* args */) {}
