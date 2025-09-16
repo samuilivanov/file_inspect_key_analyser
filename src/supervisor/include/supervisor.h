@@ -19,6 +19,7 @@
 #ifndef SRC_SUPERVISOR_INCLUDE_SUPERVISOR_H_
 #define SRC_SUPERVISOR_INCLUDE_SUPERVISOR_H_
 
+#include <boost/interprocess/ipc/message_queue.hpp>
 #include <map>
 #include <memory>
 #include <string>
@@ -56,6 +57,7 @@ class supervisor {
   }
 
   virtual void monitor_once();
+  virtual void send_pong(const CommandResponse &msg);
 
   virtual void register_commands();
 
@@ -63,6 +65,8 @@ class supervisor {
   std::vector<worker_entity> workers_;
   std::shared_ptr<ipc_queue_manager> queue_mgr_;
   std::map<CommandType, std::unique_ptr<cmd>> commands_;
+  std::unique_ptr<boost::interprocess::message_queue> mq_receive;
+  std::unique_ptr<boost::interprocess::message_queue> mq_send;
 };
 
 }  // namespace fika

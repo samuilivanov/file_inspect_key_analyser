@@ -22,6 +22,7 @@
 #include "cli.h"
 #include "commands.h"
 #include "config.h"
+#include "msg.h"
 
 #include <boost/interprocess/ipc/message_queue.hpp>
 #include <boost/process.hpp>
@@ -32,17 +33,35 @@ bool is_supervisor_running() {
     // Must match the queue name supervisor creates
     boost::interprocess::message_queue mq(boost::interprocess::open_only,
                                           "fika_supervisor_mq");
+    boost::interprocess::message_queue mq_recv(boost::interprocess::open_only,
+                                               "supervisor_fika_mq");
 
-    // If we got here, the queue exists → supervisor is running
-    return true;
+    fika::CommandMessage msg{fika::CommandType::Ping};
+    mq.send(&msg, sizeof(msg), 0);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+
+    std::size_t recv_size;
+    unsigned int priority;
+    fika::CommandResponse r;
+
+    if (mq_recv.try_receive(&r, sizeof(r), recv_size, priority)) {
+      fika::log::log_info("Supervisor is alive... Continue no init needed.");
+      return true;
+    }
+    fika::log::log_info(
+        "Supervisor is dead and queues are in a good state... Starting "
+        "supervisor service!");
+
+    return false;
   } catch (const boost::interprocess::interprocess_exception &ex) {
-    // No queue → supervisor not running
+    fika::log::log_warn(
+        "Supervisor is dead or queues are in a bad state. Starting supervisor "
+        "service!");
     return false;
   }
 }
 
 boost::process::child start_supervisor() {
-  std::cout << "Starting supervisor...\n";
   return boost::process::child(
       std::string(BINARIES_LOC) + "/supervisor",
       boost::process::std_out > stdout,

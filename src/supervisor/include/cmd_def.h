@@ -46,6 +46,16 @@ class restart_command : public cmd {
     sup->start_workers(service_name);
   }
 };
+
+class ping_command : public cmd {
+ public:
+  void execute(supervisor *sup, const std::string &service_name = "") override {
+    CommandResponse msg;
+    msg.success = true;
+    std::strcpy(msg.message, "pong");
+    sup->send_pong(msg);
+  }
+};
 }  // namespace fika::detail
 
 #endif  // SRC_SUPERVISOR_INCLUDE_CMD_DEF_H_

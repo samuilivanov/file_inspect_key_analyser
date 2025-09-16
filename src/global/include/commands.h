@@ -23,7 +23,15 @@
 
 namespace fika {
 
-enum class CommandType : int { Start, Stop, Restart, Reload, Status, Logs };
+enum class CommandType : int {
+  Start,
+  Stop,
+  Restart,
+  Reload,
+  Status,
+  Logs,
+  Ping
+};
 
 struct CommandMessage {
   CommandType cmd;

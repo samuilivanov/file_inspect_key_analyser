@@ -58,22 +58,6 @@ void msg_logger_init(const std::string &log_file) {
                      << expr::smessage);
 
     logging::core::get()->add_sink(file_sink);
-
-    // --- Console sink ---
-    typedef sinks::synchronous_sink<sinks::text_ostream_backend> console_sink_t;
-    auto console_backend = boost::make_shared<sinks::text_ostream_backend>();
-    console_backend->add_stream(
-        boost::shared_ptr<std::ostream>(&std::clog, [](std::ostream *) {}));
-    auto console_sink = boost::make_shared<console_sink_t>(console_backend);
-    console_sink->set_formatter(
-        expr::stream << "["
-                     << expr::format_date_time<boost::posix_time::ptime>(
-                            "TimeStamp", "%Y-%m-%d %H:%M:%S")
-                     << "] [" << logging::trivial::severity << "] ["
-                     << expr::attr<std::string>("ProcessName") << "] "
-                     << expr::smessage);
-
-    logging::core::get()->add_sink(console_sink);
   });
 }
 

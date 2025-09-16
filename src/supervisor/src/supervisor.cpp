@@ -48,6 +48,13 @@ supervisor::supervisor(std::vector<worker_factory_t> factories,
                        std::vector<queue_descriptor> queues,
                        std::shared_ptr<ipc_queue_manager> queue_mgr)
     : queues_(queues), queue_mgr_(queue_mgr) {
+  mq_receive = std::make_unique<boost::interprocess::message_queue>(
+      boost::interprocess::open_or_create, "fika_supervisor_mq", 100,
+      sizeof(CommandMessage));
+  mq_send = std::make_unique<boost::interprocess::message_queue>(
+      boost::interprocess::open_or_create, "supervisor_fika_mq", 100,
+      sizeof(CommandResponse));
+
   for (const auto &f : factories)
     workers_.push_back({f(), WorkerState::Stopped});
 }
@@ -102,9 +109,8 @@ void supervisor::reset_queues() {
 void supervisor::create_queues() {
   for (const auto &q : queues_) {
     queue_mgr_->create(q.name, q.max_messages, q.message_size);
-    std::cout << "Created queue: " << q.name
-              << " (max_messages=" << q.max_messages
-              << ", message_size=" << q.message_size << ")\n";
+    fika::log::log_info("Created queue: {} (max_messages={}, message_size={}",
+                        q.name, q.max_messages, q.message_size);
   }
 }
 
@@ -112,6 +118,7 @@ void supervisor::register_commands() {
   commands_[CommandType::Start] = std::make_unique<detail::start_command>();
   commands_[CommandType::Stop] = std::make_unique<detail::stop_command>();
   commands_[CommandType::Restart] = std::make_unique<detail::restart_command>();
+  commands_[CommandType::Ping] = std::make_unique<detail::ping_command>();
 }
 
 void supervisor::handle_command(CommandType cmd_type,
@@ -125,22 +132,22 @@ void supervisor::handle_command(CommandType cmd_type,
 }
 
 void supervisor::run() {
-  boost::interprocess::message_queue mq(boost::interprocess::open_or_create,
-                                        "fika_supervisor_mq", 100,
-                                        sizeof(CommandMessage));
-
   while (true) {
     CommandMessage msg;
     std::size_t recv_size;
     unsigned int priority;
 
-    if (mq.try_receive(&msg, sizeof(msg), recv_size, priority)) {
+    if (mq_receive->try_receive(&msg, sizeof(msg), recv_size, priority)) {
       handle_command(msg.cmd, msg.service());
     }
     monitor_once();
 
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
   }
+}
+
+void supervisor::send_pong(const CommandResponse &msg) {
+  mq_send->send(&msg, sizeof(CommandResponse), 0);
 }
 
 }  // namespace fika

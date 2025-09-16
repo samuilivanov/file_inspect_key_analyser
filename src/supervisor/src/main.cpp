@@ -29,6 +29,7 @@
 
 int main(int argc, char const *argv[]) {
   fika::log::msg_logger_init();
+  fika::log::log_info("Starting supervisor...");
 
   std::vector<fika::queue_descriptor> queues = {
       {"job_queue_detector", 100, sizeof(fika::file_job_shm)},
@@ -49,7 +50,7 @@ int main(int argc, char const *argv[]) {
       });
     });
 
-    std::cout << "Loaded worker: " << cfg.name << " (" << cfg.path << ")\n";
+    fika::log::log_info("Loaded worker: {} ({})", cfg.name, cfg.path);
   }
 
   fika::supervisor sup(factories, queues, queue_mgr);

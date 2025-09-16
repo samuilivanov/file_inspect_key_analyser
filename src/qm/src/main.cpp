@@ -43,7 +43,7 @@ void setup() {
 }  // namespace
 
 int main(int argc, char const *argv[]) {
-  fika::log::msg_logger_init("qm.log");
+  fika::log::msg_logger_init();
   fika::log::log_info("Starting qm");
 
   std::map<std::string,
