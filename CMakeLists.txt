@@ -91,7 +91,12 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 # Where static libraries go
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+find_program(CLANG_TIDY clang-tidy)
 
+set(CMAKE_CXX_CLANG_TIDY
+    "${CLANG_TIDY};-p=${CMAKE_BINARY_DIR};--config-file=${CMAKE_SOURCE_DIR}/.clang-tidy"
+)
 add_subdirectory(src/fika)
 add_subdirectory(src/global) 
 add_subdirectory(src/util)
@@ -154,24 +159,26 @@ file(GLOB_RECURSE HEADER_FILES
     )
 endif()
 
-find_program(CLANG_TIDY clang-tidy)
 
 if(CLANG_TIDY)
-file(GLOB_RECURSE CPP_FILES
+file(GLOB_RECURSE CPP_FILES_CLANG_TIDY
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*/src/*.cpp"
 )
 
-file(GLOB_RECURSE HEADER_FILES
+file(GLOB_RECURSE HEADER_FILES_CLANG_TIDY
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*/include/*.h"
 )
 
 
-    add_custom_target(clang-tidy
-        COMMAND ${CLANG_TIDY} -p=${CMAKE_BINARY_DIR} ${CPP_FILES} ${HEADER_FILES}
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        COMMENT "Running clang-tidy on all source files..."
-        VERBATIM
-    )
+add_custom_target(clang-tidy
+    COMMAND ${CLANG_TIDY}
+            -p=${CMAKE_BINARY_DIR}
+            -checks=${CLANG_TIDY_CHECKS}
+            ${CPP_FILES_CLANG_TIDY}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMENT "Running clang-tidy on all source files..."
+    VERBATIM
+)
 endif()
 
 # Find Python interpreter

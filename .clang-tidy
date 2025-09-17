@@ -1,0 +1,16 @@
+Checks: >
+  -*,
+  clang-analyzer-*,
+  bugprone-*,
+  performance-*,
+  modernize-*,
+  readability-*,
+  cppcoreguidelines-*,
+  -modernize-use-trailing-return-type
+
+WarningsAsErrors: ''
+HeaderFilterRegex: 'src/.*'  # only check your src/ folder
+FormatStyle: file
+CheckOptions:
+  - key: modernize-use-auto.MinTypeNameLength
+    value: '0'

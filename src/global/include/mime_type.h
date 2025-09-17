@@ -19,6 +19,7 @@
 #ifndef SRC_GLOBAL_INCLUDE_MIME_TYPE_H_
 #define SRC_GLOBAL_INCLUDE_MIME_TYPE_H_
 
+#include <algorithm>
 #include <array>
 #include <optional>
 #include <string>
@@ -104,17 +105,20 @@ struct EnrichedResult {
 };
 
 static constexpr Type map_type(std::string_view detectedMime) {
-  for (auto const& entry : detectorMap) {
-    if (entry.detectorMime == detectedMime) return entry.type;
-  }
-  return Type::Unknown;
+  auto it = std::find_if(
+      detectorMap.begin(), detectorMap.end(),
+      [&](const auto& entry) { return entry.detectorMime == detectedMime; });
+
+  return (it != detectorMap.end()) ? it->type : Type::Unknown;
 }
 
 // constexpr lookup of metadata from Type
 static constexpr MimeInfo map_info(Type type) {
-  for (auto const& info : mimeInfos) {
-    if (info.type == type) return info;
-  }
+  auto it = std::find_if(mimeInfos.begin(), mimeInfos.end(),
+                         [&](const auto& info) { return info.type == type; });
+
+  if (it != mimeInfos.end()) return *it;
+
   // fallback unknown
   return {Type::Unknown, "unknown", "Unknown file type", "None"};
 }

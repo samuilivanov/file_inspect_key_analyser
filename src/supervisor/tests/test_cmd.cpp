@@ -18,10 +18,12 @@
 #include <doctest/doctest.h>
 
 #include "cmd_def.h"
+#include "commands.h"
 
 struct test_supervisor : public fika::supervisor {
   std::vector<std::string> started;
   std::vector<std::string> stopped;
+  std::vector<fika::CommandResponse> sent_messages;
 
   test_supervisor(std::vector<worker_factory_t> factories,
                   std::vector<fika::queue_descriptor> queues,
@@ -34,6 +36,9 @@ struct test_supervisor : public fika::supervisor {
 
   void stop_workers(const std::string &service_name = "") override {
     stopped.push_back(service_name);
+  }
+  void send_pong(const fika::CommandResponse &msg) override {
+    sent_messages.push_back(msg);
   }
 };
 
@@ -79,4 +84,19 @@ TEST_CASE("restart_command stops and starts workers") {
 
   CHECK(sup.started.size() == 1);
   CHECK(sup.started[0] == "parser");
+}
+
+TEST_CASE("ping_command executes send_pong with pong message") {
+  std::vector<std::function<std::unique_ptr<fika::worker>()>> factories;
+  std::vector<fika::queue_descriptor> queues;
+  std::shared_ptr<fika::ipc_queue_manager> queue_mgr;
+  test_supervisor sup(factories, queues, queue_mgr);
+
+  fika::detail::ping_command cmd;
+
+  cmd.execute(&sup, "any_service");
+
+  REQUIRE(sup.sent_messages.size() == 1);
+  CHECK(sup.sent_messages[0].success == true);
+  CHECK(std::string(sup.sent_messages[0].message) == "pong");
 }
