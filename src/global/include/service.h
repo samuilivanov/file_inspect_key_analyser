@@ -37,8 +37,6 @@
 
 namespace fika {
 
-struct StopJob {};  // special type
-
 template <typename Job, typename Result>
 class Service {
  public:
@@ -71,25 +69,34 @@ class Service {
  private:
   void receiveLoop() {
     while (running_) {
-      Job job{};
-      receiver_->receive(job);
+      Job msg{};
+      receiver_->receive(msg);
       // Detect poison pill
-      if (job.stop) {
-        log::log_info("received poison pill - stopping");
-
-        break;  // break out of receive loop, but don't kill pool yet
+      switch (msg.type) {
+        case MessageType::JOB:
+          boost::asio::post(pool_, [this, msg] {
+            auto [queue, result] = handler_(msg);
+            auto it = senders_.find(queue);
+            if (it != senders_.end()) {
+              log::log_info("sending to {} queue", queue);
+              it->second->send(result);
+            } else {
+              // optional: log missing queue mapping
+            }
+          });
+          break;
+        case MessageType::HEARTBEAT:
+          // handle_heartbeat(msg.heartbeat);
+          break;
+        case MessageType::COMMAND:
+          log::log_info("received poison pill - stopping");
+          break;  // break out of receive loop, but don't kill pool yet
       }
+      // if (job.stop) {
+      //   log::log_info("received poison pill - stopping");
 
-      boost::asio::post(pool_, [this, job] {
-        auto [queue, result] = handler_(job);
-        auto it = senders_.find(queue);
-        if (it != senders_.end()) {
-          log::log_info("sending to {} queue", queue);
-          it->second->send(result);
-        } else {
-          // optional: log missing queue mapping
-        }
-      });
+      //   break;  // break out of receive loop, but don't kill pool yet
+      // }
     }
     pool_.join();
   }

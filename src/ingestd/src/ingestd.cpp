@@ -40,7 +40,7 @@ void generate_unique_id(char (&id)[64]) {
                .count();
 
   // Random 4-digit hex
-  static thread_local std::mt19937 rng(std::random_device {}());
+  static thread_local std::mt19937 rng(std::random_device{}());
   std::uniform_int_distribution<int> dist(0, 0xffff);
   int rand_hex = dist(rng);
 
@@ -65,9 +65,9 @@ void ingestd::handle_file(const std::string &tmp_path,
   generate_unique_id(job.id);
   std::strncpy(job.path, dst.c_str(), sizeof(job.path) - 1);
   log::log_info("File job created with id: {}", job.id);
-
-  mq_.send(&job, sizeof(job), 0);
-  log::log_info("File job {} send for processing", job.id);
+  fika::ipc_message msg{job};
+  mq_.send(&msg, sizeof(msg), 0);
+  log::log_info("File job {} send for processing", msg.job.id);
 }
 
 void ingestd::run() {

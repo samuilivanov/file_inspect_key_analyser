@@ -48,7 +48,7 @@ class qm {
     if (it != jobs_in_memory.end()) {
       it->second = job.to_file_job();  // replace value
     } else {
-      log::log_info("adding new job and return");
+      log::log_info("adding new job {} and return", job.id);
       return add_job(job.to_file_job());
     }
 
@@ -74,6 +74,7 @@ class qm {
 
   std::pair<std::string, file_job_shm> handle_event(file_job *job, Event ev) {
     file_job_shm j{};
+    std::cout << sizeof(j);
     if (sm.apply(job, ev)) {
       j.from_file_job(*job);
     }

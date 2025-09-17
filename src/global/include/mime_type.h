@@ -30,7 +30,7 @@ namespace fika::mime {
 // -------------------------
 // Internal MIME type enum
 // -------------------------
-enum class Type {
+enum class Type : std::uint16_t {
   Unknown,
   MsOfficeWord,
   MsOfficeExcel,

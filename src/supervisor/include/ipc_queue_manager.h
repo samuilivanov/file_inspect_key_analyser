@@ -54,8 +54,7 @@ struct boost_queue_manager : public ipc_queue_manager {
     queues_[name] = mq;  // keep handle alive
   }
   void send_stop_job(const std::string &queue_name) override {
-    file_job_shm stop_job{};
-    stop_job.stop = true;
+    ipc_message stop_job{1};
     queues_[queue_name]->send(&stop_job, sizeof(stop_job), 0);
   }
   std::map<std::string, std::shared_ptr<boost::interprocess::message_queue>>

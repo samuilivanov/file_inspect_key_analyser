@@ -34,10 +34,10 @@ int main(int argc, char const *argv[]) {
   fika::log::log_info("Starting detect service");
   try {
     std::map<std::string,
-             std::shared_ptr<fika::MsgQueueSender<fika::file_job_shm>>>
+             std::shared_ptr<fika::MsgQueueSender<fika::ipc_message>>>
         senders;
     senders.emplace("qm",
-                    std::make_shared<fika::MsgQueueSender<fika::file_job_shm>>(
+                    std::make_shared<fika::MsgQueueSender<fika::ipc_message>>(
                         "result_queue"));
 
     std::vector<std::unique_ptr<fika::file_detector>> dets;
@@ -47,24 +47,26 @@ int main(int argc, char const *argv[]) {
 
     fika::detect::detector d(std::move(dets));
     // The actual work to be done per job
-    auto handler = [&d](const fika::file_job_shm &job)
-        -> std::pair<std::string, fika::file_job_shm> {
-      std::cout << "Processing job " << job.id << "\n";
-      fika::file_job_shm r = job;
-      auto result = d.detect_file(job.path);
+    auto handler = [&d](const fika::ipc_message &msg)
+        -> std::pair<std::string, fika::ipc_message> {
+      std::cout << "Processing job " << msg.job.id << "\n";
+      fika::file_job_shm r = msg.job;
+      auto result = d.detect_file(msg.job.path);
       fika::mime::Type mime_info = fika::mime::map_type(result.mime_type);
       r.mime = mime_info;
-      fika::log::log_info("Detect file: {}: {}", job.path, result.mime_type);
+      fika::log::log_info("Detect file: {}: {}", msg.job.path,
+                          result.mime_type);
       if (result.mime_type != "application/octet-stream") {
         r.status = fika::Status::DETECTING;
       } else {
         r.status = fika::Status::FAILED;
       }
-      return std::make_pair("qm", r);
+      fika::ipc_message res{r};
+      return std::make_pair("qm", res);
     };
 
-    fika::Service<fika::file_job_shm, fika::file_job_shm> service(
-        std::make_unique<fika::MsgQueueReceiver<fika::file_job_shm>>(
+    fika::Service<fika::ipc_message, fika::ipc_message> service(
+        std::make_unique<fika::MsgQueueReceiver<fika::ipc_message>>(
             "job_queue_detector"),
         senders, handler);
 

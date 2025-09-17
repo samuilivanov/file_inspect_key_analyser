@@ -32,9 +32,9 @@ int main(int argc, char const *argv[]) {
   fika::log::log_info("Starting supervisor...");
 
   std::vector<fika::queue_descriptor> queues = {
-      {"job_queue_detector", 100, sizeof(fika::file_job_shm)},
-      {"job_queue_parse", 100, sizeof(fika::file_job_shm)},
-      {"result_queue", 100, sizeof(fika::file_job_shm)}};
+      {"job_queue_detector", 100, sizeof(fika::ipc_message)},
+      {"job_queue_parse", 100, sizeof(fika::ipc_message)},
+      {"result_queue", 100, sizeof(fika::ipc_message)}};
 
   std::shared_ptr<fika::ipc_queue_manager> queue_mgr =
       std::make_shared<fika::detail::boost_queue_manager>();

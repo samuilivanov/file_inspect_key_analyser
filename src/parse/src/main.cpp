@@ -48,24 +48,24 @@ int main() {
   fika::log::log_info("Starting parser service");
   try {
     std::map<std::string,
-             std::shared_ptr<fika::MsgQueueSender<fika::file_job_shm>>>
+             std::shared_ptr<fika::MsgQueueSender<fika::ipc_message>>>
         senders;
     senders.emplace("qm",
-                    std::make_shared<fika::MsgQueueSender<fika::file_job_shm>>(
+                    std::make_shared<fika::MsgQueueSender<fika::ipc_message>>(
                         "result_queue"));
     fika::parser_registry parsers;
 
     // The actual work to be done per job
-    auto handler = [&parsers](const fika::file_job_shm &job)
-        -> std::pair<std::string, fika::file_job_shm> {
-      std::cout << "Processing job " << job.id << "\n";
-      auto j = process_job(job, &parsers);
-
-      return std::make_pair("qm", j);
+    auto handler = [&parsers](const fika::ipc_message &msg)
+        -> std::pair<std::string, fika::ipc_message> {
+      std::cout << "Processing job " << msg.job.id << "\n";
+      auto j = process_job(msg.job, &parsers);
+      fika::ipc_message jj{j};
+      return std::make_pair("qm", jj);
     };
 
-    fika::Service<fika::file_job_shm, fika::file_job_shm> service(
-        std::make_unique<fika::MsgQueueReceiver<fika::file_job_shm>>(
+    fika::Service<fika::ipc_message, fika::ipc_message> service(
+        std::make_unique<fika::MsgQueueReceiver<fika::ipc_message>>(
             "job_queue_parse"),
         senders, handler);
 

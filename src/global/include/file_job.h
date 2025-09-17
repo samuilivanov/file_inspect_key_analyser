@@ -19,6 +19,7 @@
 #ifndef SRC_GLOBAL_INCLUDE_FILE_JOB_H_
 #define SRC_GLOBAL_INCLUDE_FILE_JOB_H_
 
+#include <cstdint>
 #include <cstring>
 #include <filesystem>
 #include <string>
@@ -30,6 +31,8 @@ namespace fika {
 constexpr size_t MAX_ID_SIZE = 64;
 constexpr size_t MAX_PATH_SIZE = 256;
 
+enum class MessageType { JOB, HEARTBEAT, COMMAND };
+
 enum class Status { NEW, DETECTING, PARSING, DONE, FAILED };
 enum class Event { SUBMIT, DETECTION_OK, DETECTION_FAIL, PARSE_OK, PARSE_FAIL };
 enum class JobType { DETECTOR, PARSER, NONE };
@@ -38,9 +41,9 @@ struct file_job {
   std::string id;
   std::filesystem::path path;
   int attempts = 0;
-  Status status;
-  JobType type;
-  mime::Type mime;
+  Status status{};
+  JobType type{};
+  mime::Type mime{};
   bool stop = false;
 };
 
@@ -83,6 +86,24 @@ struct file_job_shm {
     fj.stop = stop;
     return fj;
   }
+};
+
+struct ipc_message {
+  MessageType type{};
+  union {
+    file_job_shm job;  // full job metadata
+    int command_id;    // simple command (start/stop/ping)
+  };
+
+  // JOB constructor
+  explicit ipc_message(const file_job_shm& j)
+      : type(MessageType::JOB), job(j) {}
+
+  // COMMAND constructor
+  explicit ipc_message(int cmd) : type(MessageType::COMMAND), command_id(cmd) {}
+
+  // Default constructor (optional)
+  ipc_message() : type(MessageType::JOB), job{} {}
 };
 
 }  // namespace fika

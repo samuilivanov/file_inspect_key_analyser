@@ -47,25 +47,28 @@ int main(int argc, char const *argv[]) {
   fika::log::log_info("Starting qm");
 
   std::map<std::string,
-           std::shared_ptr<fika::MsgQueueSender<fika::file_job_shm>>>
+           std::shared_ptr<fika::MsgQueueSender<fika::ipc_message>>>
       senders;
   senders.emplace("parse",
-                  std::make_shared<fika::MsgQueueSender<fika::file_job_shm>>(
+                  std::make_shared<fika::MsgQueueSender<fika::ipc_message>>(
                       "job_queue_parse"));
   senders.emplace("detect",
-                  std::make_shared<fika::MsgQueueSender<fika::file_job_shm>>(
+                  std::make_shared<fika::MsgQueueSender<fika::ipc_message>>(
                       "job_queue_detector"));
 
   fika::qm q;
   setup();
 
-  auto handler = [&q](const fika::file_job_shm &job)
-      -> std::pair<std::string, fika::file_job_shm> {
-    return q.process_results(job);
+  auto handler = [&q](const fika::ipc_message &msg)
+      -> std::pair<std::string, fika::ipc_message> {
+    // fika::log::log_info("mgs type: {}, msg id: {}", msg.type, msg.job.id);
+    auto r = q.process_results(msg.job);
+    fika::ipc_message msg_res{r.second};
+    return std::make_pair(r.first, msg_res);
   };
 
-  fika::Service<fika::file_job_shm, fika::file_job_shm> service(
-      std::make_unique<fika::MsgQueueReceiver<fika::file_job_shm>>(
+  fika::Service<fika::ipc_message, fika::ipc_message> service(
+      std::make_unique<fika::MsgQueueReceiver<fika::ipc_message>>(
           "result_queue"),
       senders, handler);
 
