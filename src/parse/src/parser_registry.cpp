@@ -22,25 +22,29 @@
 #include "parser.h"
 #include "parsers.h"
 
-namespace fika {
+namespace {
 
-std::unique_ptr<parser> parser_registry::create_parser(
-    mime::Type mimeType) const {
+std::unique_ptr<fika::parser> create_parser(fika::mime::Type mimeType) {
   switch (mimeType) {
-    case mime::Type::Pdf:
-      return std::make_unique<pdf_parser>();
-    case mime::Type::TextPlain:
-      return std::make_unique<text_parser>();
-    case mime::Type::ImageJpeg:
-      return std::make_unique<img_parser>();
+    case fika::mime::Type::Pdf:
+      return std::make_unique<fika::pdf_parser>();
+    case fika::mime::Type::TextPlain:
+      return std::make_unique<fika::text_parser>();
+    case fika::mime::Type::ImageJpeg:
+      return std::make_unique<fika::img_parser>();
     default:
       return nullptr;
   }
 }
+}  // namespace
+
+namespace fika {
 
 parser *parser_registry::find_parser(mime::Type mimeType) {
-  auto it = parsers_.find(mimeType);
-  if (it != parsers_.end()) return it->second.get();
+  auto iter = parsers_.find(mimeType);
+  if (iter != parsers_.end()) {
+    return iter->second.get();
+  }
 
   if (auto psr = create_parser(mimeType)) {
     parser *ptr = psr.get();

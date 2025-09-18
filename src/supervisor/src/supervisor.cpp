@@ -138,7 +138,7 @@ void supervisor::run() {
     unsigned int priority;
 
     if (mq_receive->try_receive(&msg, sizeof(msg), recv_size, priority)) {
-      handle_command(msg.cmd, msg.service());
+      handle_command(msg.cmd_, msg.service());
     }
     monitor_once();
 

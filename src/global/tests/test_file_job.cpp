@@ -28,7 +28,7 @@ using namespace fika;
 
 TEST_CASE("file_job_shm copies all fields and roundtrips") {
   file_job fj;
-  fj.id = "job_123";
+  fj.job_id = "job_123";
   fj.path = "/tmp/file.txt";
   fj.attempts = 2;
   fj.status = Status::DETECTING;
@@ -40,8 +40,8 @@ TEST_CASE("file_job_shm copies all fields and roundtrips") {
   bool ok = shm.from_file_job(fj);
 
   CHECK(ok == true);
-  CHECK(std::strcmp(shm.id, "job_123") == 0);
-  CHECK(std::strcmp(shm.path, "/tmp/file.txt") == 0);
+  CHECK(std::strcmp(shm.job_id.data(), "job_123") == 0);
+  CHECK(std::strcmp(shm.path.data(), "/tmp/file.txt") == 0);
   CHECK(shm.attempts == 2);
   CHECK(shm.status == Status::DETECTING);
   CHECK(shm.type == JobType::DETECTOR);
@@ -49,7 +49,7 @@ TEST_CASE("file_job_shm copies all fields and roundtrips") {
   CHECK(shm.stop == 1);
 
   file_job fj2 = shm.to_file_job();
-  CHECK(fj2.id == fj.id);
+  CHECK(fj2.job_id == fj.job_id.data());
   CHECK(fj2.path == fj.path);
   CHECK(fj2.attempts == fj.attempts);
   CHECK(fj2.status == fj.status);
@@ -63,7 +63,7 @@ TEST_CASE("Truncation detection for long id and path") {
   std::string long_path(MAX_PATH_SIZE + 20, 'Y');
 
   file_job fj;
-  fj.id = long_id;
+  fj.job_id = long_id;
   fj.path = long_path;
   fj.status = Status::PARSING;
   fj.type = JobType::PARSER;
@@ -74,18 +74,18 @@ TEST_CASE("Truncation detection for long id and path") {
   bool ok = shm.from_file_job(fj);
 
   CHECK(ok == false);  // truncation occurred
-  CHECK(strlen(shm.id) == MAX_ID_SIZE - 1);
-  CHECK(strlen(shm.path) == MAX_PATH_SIZE - 1);
+  CHECK(strlen(shm.job_id.data()) == MAX_ID_SIZE - 1);
+  CHECK(strlen(shm.path.data()) == MAX_PATH_SIZE - 1);
 
   file_job fj2 = shm.to_file_job();
-  CHECK(fj2.id.size() == MAX_ID_SIZE - 1);
+  CHECK(fj2.job_id.size() == MAX_ID_SIZE - 1);
   CHECK(fj2.path.string().size() == MAX_PATH_SIZE - 1);
 }
 
 TEST_CASE("Default constructed file_job_shm is zeroed") {
   file_job_shm shm;
-  CHECK(std::strlen(shm.id) == 0);
-  CHECK(std::strlen(shm.path) == 0);
+  CHECK(std::strlen(shm.job_id.data()) == 0);
+  CHECK(std::strlen(shm.path.data()) == 0);
   CHECK(shm.attempts == 0);
   CHECK(shm.stop == 0);
 }

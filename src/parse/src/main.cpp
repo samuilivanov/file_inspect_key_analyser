@@ -31,14 +31,14 @@
 namespace {
 fika::file_job_shm process_job(const fika::file_job_shm &job,
                                fika::parser_registry *parsers) {
-  fika::file_job_shm j = job;
+  fika::file_job_shm job_shm = job;
   if (parsers->find_parser(job.mime)) {
     fika::log::log_info("in parsers");
-    j.status = fika::Status::DONE;
+    job_shm.status = fika::Status::DONE;
   } else {
-    j.status = fika::Status::FAILED;
+    job_shm.status = fika::Status::FAILED;
   }
-  return j;
+  return job_shm;
 }
 
 }  // namespace
@@ -58,10 +58,12 @@ int main() {
     // The actual work to be done per job
     auto handler = [&parsers](const fika::ipc_message &msg)
         -> std::pair<std::string, fika::ipc_message> {
-      std::cout << "Processing job " << msg.job.id << "\n";
-      auto j = process_job(msg.job, &parsers);
-      fika::ipc_message jj{j};
-      return std::make_pair("qm", jj);
+      const auto &file_job = std::get<fika::file_job_shm>(msg);
+      fika::log::log_info("Processing job {}",
+                          std::string(file_job.job_id.data()));
+      auto job_shm = process_job(file_job, &parsers);
+      fika::ipc_message response_msg{job_shm};
+      return std::make_pair("qm", response_msg);
     };
 
     fika::Service<fika::ipc_message, fika::ipc_message> service(
@@ -73,7 +75,7 @@ int main() {
 
     service.stop();
   } catch (const std::exception &e) {
-    std::cerr << "Service failed: " << e.what() << std::endl;
+    fika::log::log_info("Service failed: {}", e.what());
     return 1;
   }
   fika::log::log_info("Stopping parse service");

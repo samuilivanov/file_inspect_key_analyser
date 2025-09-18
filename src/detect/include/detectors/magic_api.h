@@ -32,6 +32,11 @@ struct magic_api {
   virtual void close(void *handle) = 0;
   virtual const char *error(void *handle) = 0;
   virtual ~magic_api() = default;
+  magic_api(const magic_api &) = default;
+  magic_api(magic_api &&) = default;
+  magic_api &operator=(const magic_api &) = default;
+  magic_api &operator=(magic_api &&) = default;
+  magic_api() = default;
 };
 
 // Real libmagic adapter

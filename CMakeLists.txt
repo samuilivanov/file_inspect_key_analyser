@@ -94,9 +94,9 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 find_program(CLANG_TIDY clang-tidy)
 
-set(CMAKE_CXX_CLANG_TIDY
-    "${CLANG_TIDY};-p=${CMAKE_BINARY_DIR};--config-file=${CMAKE_SOURCE_DIR}/.clang-tidy"
-)
+# set(CMAKE_CXX_CLANG_TIDY
+#     "${CLANG_TIDY};-p=${CMAKE_BINARY_DIR};--config-file=${CMAKE_SOURCE_DIR}/.clang-tidy"
+# )
 add_subdirectory(src/fika)
 add_subdirectory(src/global) 
 add_subdirectory(src/util)

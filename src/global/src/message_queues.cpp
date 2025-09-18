@@ -25,8 +25,8 @@ void boost_job_sender::send(const file_job_shm &job) {
 
 file_job_shm boost_job_receiver::receive() {
   file_job_shm job{};
-  size_t recv_size;
-  unsigned int priority;
+  size_t recv_size{};
+  unsigned int priority{};
   mq.receive(&job, sizeof(job), recv_size, priority);
   return job;
 }

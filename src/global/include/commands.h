@@ -18,12 +18,14 @@
 
 #ifndef SRC_GLOBAL_INCLUDE_COMMANDS_H_
 #define SRC_GLOBAL_INCLUDE_COMMANDS_H_
+#include <array>
+#include <cstdint>
 #include <cstring>
 #include <string>
 
 namespace fika {
 
-enum class CommandType : int {
+enum class CommandType : std::uint8_t {
   Start,
   Stop,
   Restart,
@@ -33,25 +35,29 @@ enum class CommandType : int {
   Ping
 };
 
-struct CommandMessage {
-  CommandType cmd;
-  char service_name[64];
+constexpr size_t SERVICE_NAME_MAX_LEN = 64;
+constexpr size_t SERVICE_RESPONSE_LEN = 256;
 
-  explicit CommandMessage(CommandType c = CommandType::Start,
+struct CommandMessage {
+  CommandType cmd_;
+  std::array<char, SERVICE_NAME_MAX_LEN> service_name{};
+
+  explicit CommandMessage(CommandType cmd = CommandType::Start,
                           const std::string &service = "")
-      : cmd(c) {
-    std::strncpy(service_name, service.c_str(), sizeof(service_name) - 1);
-    service_name[sizeof(service_name) - 1] = '\0';
+      : cmd_(cmd) {
+    auto len = service.copy(service_name.data(), service_name.size() - 1);
+    service_name.at(len) = '\0';
   }
 
-  std::string service() const { return std::string(service_name); }
+  [[nodiscard]] std::string service() const {
+    return std::string{service_name.data()};
+  }
 };
 
 struct CommandResponse {
-  bool success;
-  char message[256];  // e.g., "Service started", "Error: ..."
-
-  CommandResponse() : success(false) { message[0] = '\0'; }
+  bool success{false};
+  std::array<char, SERVICE_RESPONSE_LEN>
+      message{};  // e.g., "Service started", "Error: ..."
 };
 
 }  // namespace fika

@@ -40,28 +40,31 @@ int main(int argc, char const *argv[]) {
                     std::make_shared<fika::MsgQueueSender<fika::ipc_message>>(
                         "result_queue"));
 
-    std::vector<std::unique_ptr<fika::file_detector>> dets;
+    std::vector<std::unique_ptr<fika::file_detector>> detectors;
 
-    dets.push_back(std::make_unique<fika::magic_handle>(
+    detectors.push_back(std::make_unique<fika::magic_handle>(
         std::make_unique<fika::libmagic_api>()));
 
-    fika::detect::detector d(std::move(dets));
+    fika::detect::detector detect(std::move(detectors));
     // The actual work to be done per job
-    auto handler = [&d](const fika::ipc_message &msg)
+    auto handler = [&detect](const fika::ipc_message &msg)
         -> std::pair<std::string, fika::ipc_message> {
-      std::cout << "Processing job " << msg.job.id << "\n";
-      fika::file_job_shm r = msg.job;
-      auto result = d.detect_file(msg.job.path);
+      const auto &file_job = std::get<fika::file_job_shm>(msg);
+
+      fika::log::log_info("Processing job {}",
+                          std::string(file_job.job_id.data()));
+      fika::file_job_shm job_from_msg = file_job;
+      auto result = detect.detect_file(std::string(file_job.path.data()));
       fika::mime::Type mime_info = fika::mime::map_type(result.mime_type);
-      r.mime = mime_info;
-      fika::log::log_info("Detect file: {}: {}", msg.job.path,
-                          result.mime_type);
+      job_from_msg.mime = mime_info;
+      fika::log::log_info("Detect file: {}: {}",
+                          std::string(file_job.path.data()), result.mime_type);
       if (result.mime_type != "application/octet-stream") {
-        r.status = fika::Status::DETECTING;
+        job_from_msg.status = fika::Status::DETECTING;
       } else {
-        r.status = fika::Status::FAILED;
+        job_from_msg.status = fika::Status::FAILED;
       }
-      fika::ipc_message res{r};
+      fika::ipc_message res{job_from_msg};
       return std::make_pair("qm", res);
     };
 
@@ -74,7 +77,7 @@ int main(int argc, char const *argv[]) {
 
     service.stop();
   } catch (const std::exception &e) {
-    std::cerr << "Service failed: " << e.what() << std::endl;
+    fika::log::log_info("Service failed: {}", e.what());
     return 1;
   }
 

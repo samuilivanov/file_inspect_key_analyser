@@ -15,13 +15,17 @@
  */
 
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-#include "cli.h"
 #include <doctest/doctest.h>
+
+#include <span>
+
+#include "cli.h"
 
 TEST_CASE("parse start command with service") {
   const char *argv[] = {"fika", "-c", "start", "-s", "parser"};
   int argc = 5;
-  auto result = fika::cli::parse_command_line(argc, const_cast<char **>(argv));
+  auto result = fika::cli::parse_command_line(
+      {const_cast<char **>(argv), static_cast<size_t>(argc)});
   CHECK(result.type == fika::CommandType::Start);
   CHECK(result.service == "parser");
 }
@@ -29,7 +33,8 @@ TEST_CASE("parse start command with service") {
 TEST_CASE("parse stop command without service") {
   const char *argv[] = {"fika", "-c", "stop"};
   int argc = 3;
-  auto result = fika::cli::parse_command_line(argc, const_cast<char **>(argv));
+  auto result = fika::cli::parse_command_line(
+      {const_cast<char **>(argv), static_cast<size_t>(argc)});
   CHECK(result.type == fika::CommandType::Stop);
   CHECK(result.service.empty());
 }
@@ -37,15 +42,15 @@ TEST_CASE("parse stop command without service") {
 TEST_CASE("unknown command throws") {
   const char *argv[] = {"fika", "foo"};
   int argc = 2;
-  CHECK_THROWS_AS(
-      fika::cli::parse_command_line(argc, const_cast<char **>(argv)),
-      std::invalid_argument);
+  CHECK_THROWS_AS(fika::cli::parse_command_line(
+                      {const_cast<char **>(argv), static_cast<size_t>(argc)}),
+                  std::invalid_argument);
 }
 
 TEST_CASE("help prints usage") {
   const char *argv[] = {"fika", "--help"};
   int argc = 2;
-  CHECK_THROWS_AS(
-      fika::cli::parse_command_line(argc, const_cast<char **>(argv)),
-      std::invalid_argument);
+  CHECK_THROWS_AS(fika::cli::parse_command_line(
+                      {const_cast<char **>(argv), static_cast<size_t>(argc)}),
+                  std::invalid_argument);
 }

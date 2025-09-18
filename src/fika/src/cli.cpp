@@ -26,8 +26,6 @@
 #include <boost/program_options.hpp>
 // clang-format on
 
-namespace po = boost::program_options;
-
 namespace fika::cli {
 
 static const std::map<std::string, fika::CommandType> command_map = {
@@ -39,37 +37,41 @@ static const std::map<std::string, fika::CommandType> command_map = {
     {"logs", fika::CommandType::Logs},
 };
 
-ParsedCommand parse_command_line(int argc, char *argv[]) {
-  po::options_description desc("Commands");
+ParsedCommand parse_command_line(const std::span<char*> args) {
+  boost::program_options::options_description desc("Commands");
   desc.add_options()("help,h", "show help")(
-      "command,c", po::value<std::string>(),
+      "command,c", boost::program_options::value<std::string>(),
       "command to execute (start|stop|restart|reload|status|logs)")(
-      "service,s", po::value<std::string>(), "service name (optional)");
+      "service,s", boost::program_options::value<std::string>(),
+      "service name (optional)");
 
-  po::positional_options_description p;
-  p.add("command", 1);
+  boost::program_options::positional_options_description posd;
+  posd.add("command", 1);
 
-  po::variables_map vm;
-  po::store(
-      po::command_line_parser(argc, argv).options(desc).positional(p).run(),
-      vm);
-  po::notify(vm);
+  boost::program_options::variables_map var_map;
+  boost::program_options::store(boost::program_options::command_line_parser(
+                                    static_cast<int>(args.size()), args.data())
+                                    .options(desc)
+                                    .positional(posd)
+                                    .run(),
+                                var_map);
+  boost::program_options::notify(var_map);
 
-  if (vm.count("help") || !vm.count("command")) {
+  if (var_map.count("help") || !var_map.count("command")) {
     std::ostringstream oss;
     oss << desc;
     throw std::invalid_argument(oss.str());
   }
 
-  auto cmd_str = vm["command"].as<std::string>();
-  auto it = command_map.find(cmd_str);
-  if (it == command_map.end()) {
+  auto cmd_str = var_map["command"].as<std::string>();
+  auto iter = command_map.find(cmd_str);
+  if (iter == command_map.end()) {
     throw std::invalid_argument("Unknown command: " + cmd_str);
   }
 
   std::string service =
-      vm.count("service") ? vm["service"].as<std::string>() : "";
-  return {it->second, service};
+      var_map.count("service") != 0 ? var_map["service"].as<std::string>() : "";
+  return {iter->second, service};
 }
 
 }  // namespace fika::cli

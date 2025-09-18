@@ -24,8 +24,14 @@
 namespace fika {
 struct file_detector {
   virtual ~file_detector() = default;
+  file_detector() = default;
+  file_detector(const file_detector &) = delete;
+  file_detector(file_detector &&) noexcept = default;
+  file_detector &operator=(const file_detector &) = delete;
+  file_detector &operator=(file_detector &&) noexcept = default;
   virtual std::string detect(const std::string &filepath) = 0;
-  virtual std::string name() const = 0;  // source identifier, e.g., "libmagic"
+  [[nodiscard]] virtual std::string name()
+      const = 0;  // source identifier, e.g., "libmagic"
 };
 
 }  // namespace fika

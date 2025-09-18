@@ -29,20 +29,17 @@ class pdf_parser : public parser {
  private:
   /* data */
  public:
-  pdf_parser(/* args */);
-  ~pdf_parser();
+  pdf_parser(/* args */) = default;
+  ~pdf_parser() = default;
   void parse(const file_job_shm &job) override;
 
-  const char *mime_type() const override;
+  [[nodiscard]] const char *mime_type() const override;
 };
 
 void pdf_parser::parse(const file_job_shm &job) { std::cout << "in pdf parse"; }
 
-const char *pdf_parser::mime_type() const { return "pdf"; }
+[[nodiscard]] const char *pdf_parser::mime_type() const { return "pdf"; }
 
-pdf_parser::pdf_parser(/* args */) {}
-
-pdf_parser::~pdf_parser() {}
 }  // namespace fika
 
 #endif  // SRC_PARSE_INCLUDE_PARSERS_PDF_PARSER_H_

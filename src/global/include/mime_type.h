@@ -31,7 +31,7 @@ namespace fika::mime {
 // -------------------------
 // Internal MIME type enum
 // -------------------------
-enum class Type : std::uint16_t {
+enum class Type : std::uint8_t {
   Unknown,
   MsOfficeWord,
   MsOfficeExcel,
@@ -105,19 +105,22 @@ struct EnrichedResult {
 };
 
 static constexpr Type map_type(std::string_view detectedMime) {
-  auto it = std::find_if(
+  const auto* iter = std::find_if(
       detectorMap.begin(), detectorMap.end(),
       [&](const auto& entry) { return entry.detectorMime == detectedMime; });
 
-  return (it != detectorMap.end()) ? it->type : Type::Unknown;
+  return (iter != detectorMap.end()) ? iter->type : Type::Unknown;
 }
 
 // constexpr lookup of metadata from Type
 static constexpr MimeInfo map_info(Type type) {
-  auto it = std::find_if(mimeInfos.begin(), mimeInfos.end(),
-                         [&](const auto& info) { return info.type == type; });
+  const auto* iter =
+      std::find_if(mimeInfos.begin(), mimeInfos.end(),
+                   [&](const auto& info) { return info.type == type; });
 
-  if (it != mimeInfos.end()) return *it;
+  if (iter != mimeInfos.end()) {
+    return *iter;
+  }
 
   // fallback unknown
   return {Type::Unknown, "unknown", "Unknown file type", "None"};
@@ -125,8 +128,8 @@ static constexpr MimeInfo map_info(Type type) {
 
 // Enrich a detection result
 static EnrichedResult enrich(const DetectionResult& det) {
-  Type t = map_type(det.mime_type);
-  MimeInfo info = map_info(t);
+  Type type = map_type(det.mime_type);
+  MimeInfo info = map_info(type);
   return {det, info};
 }
 

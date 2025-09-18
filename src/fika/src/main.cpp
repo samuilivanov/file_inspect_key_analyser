@@ -31,20 +31,20 @@
 bool is_supervisor_running() {
   try {
     // Must match the queue name supervisor creates
-    boost::interprocess::message_queue mq(boost::interprocess::open_only,
-                                          "fika_supervisor_mq");
+    boost::interprocess::message_queue mq_(boost::interprocess::open_only,
+                                           "fika_supervisor_mq");
     boost::interprocess::message_queue mq_recv(boost::interprocess::open_only,
                                                "supervisor_fika_mq");
 
     fika::CommandMessage msg{fika::CommandType::Ping};
-    mq.send(&msg, sizeof(msg), 0);
+    mq_.send(&msg, sizeof(msg), 0);
     std::this_thread::sleep_for(std::chrono::seconds(1));
 
-    std::size_t recv_size;
-    unsigned int priority;
-    fika::CommandResponse r;
+    std::size_t recv_size{};
+    unsigned int priority{};
+    fika::CommandResponse response;
 
-    if (mq_recv.try_receive(&r, sizeof(r), recv_size, priority)) {
+    if (mq_recv.try_receive(&response, sizeof(response), recv_size, priority)) {
       fika::log::log_info("Supervisor is alive... Continue no init needed.");
       return true;
     }
@@ -70,10 +70,10 @@ boost::process::child start_supervisor() {
 }
 
 void send_command(const fika::CommandMessage &msg) {
-  boost::interprocess::message_queue mq(boost::interprocess::open_or_create,
-                                        "fika_supervisor_mq", 100,
-                                        sizeof(fika::CommandMessage));
-  mq.send(&msg, sizeof(msg), 0);
+  boost::interprocess::message_queue mq_(boost::interprocess::open_or_create,
+                                         "fika_supervisor_mq", 100,
+                                         sizeof(fika::CommandMessage));
+  mq_.send(&msg, sizeof(msg), 0);
 }
 
 int main(int argc, char *argv[]) {
@@ -86,7 +86,8 @@ int main(int argc, char *argv[]) {
     std::this_thread::sleep_for(std::chrono::seconds(1));
   }
   try {
-    auto parsed = fika::cli::parse_command_line(argc, argv);
+    auto parsed =
+        fika::cli::parse_command_line({argv, static_cast<size_t>(argc)});
     send_command(fika::CommandMessage(parsed.type, parsed.service));
   } catch (const std::exception &ex) {
     std::cerr << "Error: " << ex.what() << "\n";

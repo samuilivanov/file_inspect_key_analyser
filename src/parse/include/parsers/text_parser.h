@@ -27,20 +27,18 @@ class text_parser : public parser {
  private:
   /* data */
  public:
-  text_parser(/* args */);
-  ~text_parser();
+  text_parser(/* args */) = default;
+  ~text_parser() override = default;
   void parse(const file_job_shm &job) override;
 
-  const char *mime_type() const override;
+  [[nodiscard]] const char *mime_type() const override;
 };
 void text_parser::parse(const file_job_shm &job) {
   std::cout << "in txt parse";
 }
 
-const char *text_parser::mime_type() const { return "txt"; }
-text_parser::text_parser(/* args */) {}
+[[nodiscard]] const char *text_parser::mime_type() const { return "txt"; }
 
-text_parser::~text_parser() {}
 }  // namespace fika
 
 #endif  // SRC_PARSE_INCLUDE_PARSERS_TEXT_PARSER_H_

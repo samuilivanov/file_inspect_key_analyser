@@ -29,16 +29,16 @@ using namespace fika;
 
 TEST_CASE("CommandMessage default constructor") {
   CommandMessage msg;
-  CHECK(msg.cmd == CommandType::Start);
+  CHECK(msg.cmd_ == CommandType::Start);
   CHECK(msg.service() == "");
   CHECK(msg.service_name[0] == '\0');  // null-terminated
 }
 
 TEST_CASE("CommandMessage custom constructor") {
   CommandMessage msg(CommandType::Stop, "nginx");
-  CHECK(msg.cmd == CommandType::Stop);
+  CHECK(msg.cmd_ == CommandType::Stop);
   CHECK(msg.service() == "nginx");
-  CHECK(std::strcmp(msg.service_name, "nginx") == 0);
+  CHECK(std::strcmp(msg.service_name.data(), "nginx") == 0);
 }
 
 TEST_CASE("CommandMessage truncates long service name") {
@@ -46,7 +46,7 @@ TEST_CASE("CommandMessage truncates long service name") {
   CommandMessage msg(CommandType::Restart, long_name);
 
   // Should be truncated to 63 characters + null terminator
-  CHECK(std::strlen(msg.service_name) == sizeof(msg.service_name) - 1);
+  CHECK(std::strlen(msg.service_name.data()) == sizeof(msg.service_name) - 1);
   CHECK(msg.service_name[sizeof(msg.service_name) - 1] == '\0');
 
   std::string truncated = msg.service();
@@ -63,11 +63,12 @@ TEST_CASE("CommandResponse default constructor") {
 TEST_CASE("CommandResponse message assignment") {
   CommandResponse resp;
   resp.success = true;
-  std::strncpy(resp.message, "Service started", sizeof(resp.message) - 1);
+  std::strncpy(resp.message.data(), "Service started",
+               sizeof(resp.message) - 1);
   resp.message[sizeof(resp.message) - 1] = '\0';
 
   CHECK(resp.success == true);
-  CHECK(std::string(resp.message) == "Service started");
+  CHECK(std::string(resp.message.data()) == "Service started");
   CHECK(resp.message[sizeof(resp.message) - 1] ==
         '\0');  // still null-terminated
 }

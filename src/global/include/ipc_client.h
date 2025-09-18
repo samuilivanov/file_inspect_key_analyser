@@ -40,8 +40,8 @@ class MsgQueueReceiver {
   explicit MsgQueueReceiver(const std::string &queue_name)
       : mq_recv_(boost::interprocess::open_only, queue_name.c_str()) {}
   void receive(Job &job) {
-    size_t recv_size;
-    unsigned int priority;
+    size_t recv_size{};
+    unsigned int priority{};
     mq_recv_.receive(&job, sizeof(Job), recv_size, priority);
   }
 

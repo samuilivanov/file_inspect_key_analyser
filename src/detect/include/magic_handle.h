@@ -31,14 +31,24 @@ namespace fika {
 class magic_handle : public file_detector {
  private:
   std::unique_ptr<magic_api> api_;
-  void *handle_;
+  void* handle_{nullptr};
 
  public:
   explicit magic_handle(std::unique_ptr<magic_api> api,
                         int flags = MAGIC_MIME_TYPE);
-  ~magic_handle();
-  std::string detect(const std::string &filepath) override;
-  std::string name() const override {
+  ~magic_handle() override;
+  magic_handle(const magic_handle& other) = delete;
+  magic_handle& operator=(const magic_handle&) = delete;
+  magic_handle(magic_handle&& other) noexcept : handle_(other.handle_) {
+    other.handle_ = nullptr;
+  }
+  magic_handle& operator=(magic_handle&& other) noexcept {
+    this->handle_ = other.handle_;
+    other.handle_ = nullptr;
+    return *this;
+  }
+  std::string detect(const std::string& filepath) override;
+  [[nodiscard]] std::string name() const override {
     return "libmagic";
   }  // source identifier, e.g., "libmagic"
 };

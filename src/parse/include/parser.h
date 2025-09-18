@@ -26,13 +26,18 @@ namespace fika {
 // Abstract parser interface
 class parser {
  public:
+  parser() = default;
   virtual ~parser() = default;
+  parser(const parser &) = delete;
+  parser &operator=(const parser &) = delete;
+  parser(parser &&) = delete;
+  parser &operator=(parser &&) = delete;
 
   // Parse file and update the job with results
   virtual void parse(const file_job_shm &job) = 0;
 
   // Returns mime type this parser can handle
-  virtual const char *mime_type() const = 0;
+  [[nodiscard]] virtual const char *mime_type() const = 0;
 };
 
 }  // namespace fika

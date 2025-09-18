@@ -32,7 +32,7 @@
 
 // TODO(samuil): move this to util
 namespace {
-void generate_unique_id(char (&id)[64]) {
+std::string generate_unique_id() {
   // Timestamp in milliseconds
   auto now = std::chrono::system_clock::now();
   auto t = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -45,7 +45,9 @@ void generate_unique_id(char (&id)[64]) {
   int rand_hex = dist(rng);
 
   // Format: job_<timestamp>_<rand>
-  std::snprintf(id, sizeof(id), "job_%ld_%04x", t, rand_hex);
+  std::string result = "job_";
+  result.append(std::to_string(t)).append(std::to_string(rand_hex));
+  return result;
 }
 
 }  // namespace
@@ -62,12 +64,18 @@ void ingestd::handle_file(const std::string &tmp_path,
   std::filesystem::rename(tmp_path, dst);
 
   file_job_shm job{};
-  generate_unique_id(job.id);
-  std::strncpy(job.path, dst.c_str(), sizeof(job.path) - 1);
-  log::log_info("File job created with id: {}", job.id);
+
+  auto uuid = generate_unique_id();
+  auto len = uuid.copy(job.job_id.data(), job.job_id.size() - 1);
+  job.job_id.at(len) = '\0';
+
+  len = dst.string().copy(job.path.data(), job.path.size() - 1);
+  job.path.at(len) = '\0';
+  log::log_info("File job created with id: {}", std::string(job.job_id.data()));
   fika::ipc_message msg{job};
   mq_.send(&msg, sizeof(msg), 0);
-  log::log_info("File job {} send for processing", msg.job.id);
+  log::log_info("File job {} send for processing",
+                std::string(job.job_id.data()));
 }
 
 void ingestd::run() {

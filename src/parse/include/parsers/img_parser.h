@@ -29,18 +29,15 @@ class img_parser : public parser {
  private:
   /* data */
  public:
-  img_parser(/* args */);
-  ~img_parser();
-  void parse(const file_job_shm &job) override;
+  img_parser(/* args */) = default;
+  ~img_parser() override = default;
+  [[nodiscard]] void parse(const file_job_shm &job) override;
 
   const char *mime_type() const override;
 };
 void img_parser::parse(const file_job_shm &job) { log::log_info("test img"); }
 
-const char *img_parser::mime_type() const { return "img"; }
-img_parser::img_parser(/* args */) {}
-
-img_parser::~img_parser() {}
+[[nodiscard]] const char *img_parser::mime_type() const { return "img"; }
 }  // namespace fika
 
 #endif  // SRC_PARSE_INCLUDE_PARSERS_IMG_PARSER_H_

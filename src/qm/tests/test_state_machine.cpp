@@ -27,7 +27,7 @@ TEST_CASE("state_machine applies valid transitions") {
   file_job job{};
   job.status = Status::NEW;
   job.type = JobType::DETECTOR;
-  job.id = "job1";
+  job.job_id = "job1";
 
   // NEW + SUBMIT => DETECTING
   bool applied = sm.apply(&job, Event::SUBMIT);
@@ -53,7 +53,7 @@ TEST_CASE("state_machine handles failure transitions") {
   file_job job1{};
   job1.status = Status::DETECTING;
   job1.type = JobType::DETECTOR;
-  job1.id = "job2";
+  job1.job_id = "job2";
   bool applied = sm.apply(&job1, Event::DETECTION_FAIL);
   REQUIRE(applied);
   REQUIRE(job1.status == Status::FAILED);
@@ -61,7 +61,7 @@ TEST_CASE("state_machine handles failure transitions") {
   file_job job2{};
   job2.status = Status::PARSING;
   job2.type = JobType::PARSER;
-  job2.id = "job3";
+  job2.job_id = "job3";
   applied = sm.apply(&job2, Event::PARSE_FAIL);
   REQUIRE(applied);
   REQUIRE(job2.status == Status::FAILED);
@@ -73,7 +73,7 @@ TEST_CASE("state_machine returns false for unknown transitions") {
   file_job job{};
   job.status = Status::NEW;
   job.type = JobType::DETECTOR;
-  job.id = "job4";
+  job.job_id = "job4";
   // PARSE_OK from NEW is invalid
   bool applied = sm.apply(&job, Event::PARSE_OK);
   REQUIRE(!applied);

@@ -98,5 +98,5 @@ TEST_CASE("ping_command executes send_pong with pong message") {
 
   REQUIRE(sup.sent_messages.size() == 1);
   CHECK(sup.sent_messages[0].success == true);
-  CHECK(std::string(sup.sent_messages[0].message) == "pong");
+  CHECK(std::string(sup.sent_messages[0].message.data()) == "pong");
 }

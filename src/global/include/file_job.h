@@ -19,10 +19,12 @@
 #ifndef SRC_GLOBAL_INCLUDE_FILE_JOB_H_
 #define SRC_GLOBAL_INCLUDE_FILE_JOB_H_
 
+#include <array>
 #include <cstdint>
 #include <cstring>
 #include <filesystem>
 #include <string>
+#include <variant>
 
 #include "mime_type.h"
 
@@ -31,14 +33,20 @@ namespace fika {
 constexpr size_t MAX_ID_SIZE = 64;
 constexpr size_t MAX_PATH_SIZE = 256;
 
-enum class MessageType { JOB, HEARTBEAT, COMMAND };
+enum class MessageType : std::uint8_t { JOB, HEARTBEAT, COMMAND };
 
-enum class Status { NEW, DETECTING, PARSING, DONE, FAILED };
-enum class Event { SUBMIT, DETECTION_OK, DETECTION_FAIL, PARSE_OK, PARSE_FAIL };
-enum class JobType { DETECTOR, PARSER, NONE };
+enum class Status : std::uint8_t { NEW, DETECTING, PARSING, DONE, FAILED };
+enum class Event : std::uint8_t {
+  SUBMIT,
+  DETECTION_OK,
+  DETECTION_FAIL,
+  PARSE_OK,
+  PARSE_FAIL
+};
+enum class JobType : std::uint8_t { DETECTOR, PARSER, NONE };
 
 struct file_job {
-  std::string id;
+  std::string job_id;
   std::filesystem::path path;
   int attempts = 0;
   Status status{};
@@ -48,8 +56,8 @@ struct file_job {
 };
 
 struct file_job_shm {
-  char id[MAX_ID_SIZE] = {};
-  char path[MAX_PATH_SIZE] = {};
+  std::array<char, MAX_ID_SIZE> job_id = {};
+  std::array<char, MAX_PATH_SIZE> path = {};
   int attempts = 0;
   Status status{};
   JobType type{};
@@ -57,55 +65,41 @@ struct file_job_shm {
   bool stop = false;
 
   // copy from file_job, returns false if truncation occurred
-  bool from_file_job(const file_job& fj) {
+  [[nodiscard]] bool from_file_job(const file_job& fjob) {
     bool truncated = false;
 
-    if (fj.id.size() >= MAX_ID_SIZE) truncated = true;
-    if (fj.path.string().size() >= MAX_PATH_SIZE) truncated = true;
+    if (fjob.job_id.size() >= MAX_ID_SIZE) {
+      truncated = true;
+    }
+    if (fjob.path.string().size() >= MAX_PATH_SIZE) {
+      truncated = true;
+    }
 
-    std::strncpy(id, fj.id.c_str(), MAX_ID_SIZE - 1);
-    std::strncpy(path, fj.path.string().c_str(), MAX_PATH_SIZE - 1);
+    std::strncpy(job_id.data(), fjob.job_id.c_str(), MAX_ID_SIZE - 1);
+    std::strncpy(path.data(), fjob.path.string().c_str(), MAX_PATH_SIZE - 1);
 
-    attempts = fj.attempts;
-    status = fj.status;
-    type = fj.type;
-    mime = fj.mime;
-    stop = fj.stop;
+    attempts = fjob.attempts;
+    status = fjob.status;
+    type = fjob.type;
+    mime = fjob.mime;
+    stop = fjob.stop;
 
     return !truncated;
   }
 
-  file_job to_file_job() const {
-    file_job fj;
-    fj.id = id;
-    fj.path = path;
-    fj.attempts = attempts;
-    fj.status = status;
-    fj.type = type;
-    fj.mime = mime;
-    fj.stop = stop;
-    return fj;
+  [[nodiscard]] file_job to_file_job() const {
+    file_job fjob;
+    fjob.job_id = job_id.data();
+    fjob.path = path.data();
+    fjob.attempts = attempts;
+    fjob.status = status;
+    fjob.type = type;
+    fjob.mime = mime;
+    fjob.stop = stop;
+    return fjob;
   }
 };
-
-struct ipc_message {
-  MessageType type{};
-  union {
-    file_job_shm job;  // full job metadata
-    int command_id;    // simple command (start/stop/ping)
-  };
-
-  // JOB constructor
-  explicit ipc_message(const file_job_shm& j)
-      : type(MessageType::JOB), job(j) {}
-
-  // COMMAND constructor
-  explicit ipc_message(int cmd) : type(MessageType::COMMAND), command_id(cmd) {}
-
-  // Default constructor (optional)
-  ipc_message() : type(MessageType::JOB), job{} {}
-};
-
+using ipc_message = std::variant<file_job_shm, int>;  // add more if needed
 }  // namespace fika
 
 #endif  // SRC_GLOBAL_INCLUDE_FILE_JOB_H_

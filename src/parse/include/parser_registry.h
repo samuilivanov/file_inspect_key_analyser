@@ -30,15 +30,10 @@ class parser_registry {
  public:
   parser_registry() = default;
 
-  parser_registry(const parser_registry &) = delete;
-  parser_registry &operator=(const parser_registry &) = delete;
-
   parser *find_parser(mime::Type mimeType);  // use int
 
  private:
   std::unordered_map<mime::Type, std::unique_ptr<parser>> parsers_;
-
-  std::unique_ptr<parser> create_parser(mime::Type mimeType) const;
 };
 }  // namespace fika
 

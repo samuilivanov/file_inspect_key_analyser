@@ -52,7 +52,7 @@ class ping_command : public cmd {
   void execute(supervisor *sup, const std::string &service_name = "") override {
     CommandResponse msg;
     msg.success = true;
-    std::strcpy(msg.message, "pong");
+    std::strcpy(msg.message.data(), "pong");
     sup->send_pong(msg);
   }
 };

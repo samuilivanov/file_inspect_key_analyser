@@ -35,8 +35,9 @@ class qm {
  public:
   std::pair<std::string, file_job_shm> add_job(file_job job) {
     job.status = Status::NEW;
-    jobs_in_memory[job.id] = job;
-    log::log_info("Registed job {}", job.id);
+    std::string key = job.job_id;
+    jobs_in_memory[key] = job;
+    log::log_info("Registed job {}", key);
 
     // Submit event drives the FSM
     return handle_event(&job, Event::SUBMIT);
@@ -44,27 +45,28 @@ class qm {
 
   std::pair<std::string, file_job_shm> process_results(
       const file_job_shm &job) {
-    auto it = jobs_in_memory.find(job.id);
-    if (it != jobs_in_memory.end()) {
-      it->second = job.to_file_job();  // replace value
+    std::string key = job.job_id.data();
+    auto iter = jobs_in_memory.find(key);
+    if (iter != jobs_in_memory.end()) {
+      iter->second = job.to_file_job();  // replace value
     } else {
-      log::log_info("adding new job {} and return", job.id);
+      log::log_info("adding new job {} and return", key);
       return add_job(job.to_file_job());
     }
 
     // FSM event mapping
     switch (job.status) {
       case Status::DETECTING:
-        return handle_event(&it->second, Event::DETECTION_OK);
+        return handle_event(&iter->second, Event::DETECTION_OK);
       case Status::FAILED:
-        log::log_info("Job {} FAILED", it->second.id);
+        log::log_info("Job {} FAILED", std::string(iter->second.job_id));
         return {"fail", job};
 
       case Status::PARSING:
-        return handle_event(&it->second, Event::PARSE_OK);
+        return handle_event(&iter->second, Event::PARSE_OK);
         break;
       case Status::DONE:
-        log::log_info("Job {} is fully DONE", it->second.id);
+        log::log_info("Job {} is fully DONE", std::string(iter->second.job_id));
         break;
       default:
         break;
@@ -72,11 +74,11 @@ class qm {
     return {"done", file_job_shm{}};
   }
 
-  std::pair<std::string, file_job_shm> handle_event(file_job *job, Event ev) {
-    file_job_shm j{};
-    std::cout << sizeof(j);
-    if (sm.apply(job, ev)) {
-      j.from_file_job(*job);
+  std::pair<std::string, file_job_shm> handle_event(file_job *job,
+                                                    Event event) {
+    file_job_shm fjob{};
+    if (sm.apply(job, event)) {
+      fjob.from_file_job(*job);
     }
     std::string qname;
     switch (job->type) {
@@ -90,7 +92,7 @@ class qm {
         break;
     }
     log::log_info("sending to {} service", qname);
-    return std::make_pair(qname, j);
+    return std::make_pair(qname, fjob);
   }
 
  private:

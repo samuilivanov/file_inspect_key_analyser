@@ -32,8 +32,8 @@ void setup() {
   fika::log::log_debug("Setup starting using path: {}", root.string());
   std::array<std::string, 5> subdirs{"incomming", "new", "processing", "done",
                                      "failed"};
-  for (const auto &d : subdirs) {
-    std::filesystem::path dir = root / d;
+  for (const auto &subdir : subdirs) {
+    std::filesystem::path dir = root / subdir;
     if (std::filesystem::create_directories(dir)) {
       fika::log::log_info(std::string("created dir: ") + dir.string());
     }
@@ -45,36 +45,42 @@ void setup() {
 int main(int argc, char const *argv[]) {
   fika::log::msg_logger_init();
   fika::log::log_info("Starting qm");
+  try {
+    /* code */
+    std::map<std::string,
+             std::shared_ptr<fika::MsgQueueSender<fika::ipc_message>>>
+        senders;
+    senders.emplace("parse",
+                    std::make_shared<fika::MsgQueueSender<fika::ipc_message>>(
+                        "job_queue_parse"));
+    senders.emplace("detect",
+                    std::make_shared<fika::MsgQueueSender<fika::ipc_message>>(
+                        "job_queue_detector"));
 
-  std::map<std::string,
-           std::shared_ptr<fika::MsgQueueSender<fika::ipc_message>>>
-      senders;
-  senders.emplace("parse",
-                  std::make_shared<fika::MsgQueueSender<fika::ipc_message>>(
-                      "job_queue_parse"));
-  senders.emplace("detect",
-                  std::make_shared<fika::MsgQueueSender<fika::ipc_message>>(
-                      "job_queue_detector"));
+    fika::qm q;
+    setup();
 
-  fika::qm q;
-  setup();
+    auto handler = [&q](const fika::ipc_message &msg)
+        -> std::pair<std::string, fika::ipc_message> {
+      // fika::log::log_info("mgs type: {}, msg id: {}", msg.type, msg.job.id);
+      auto &file_job = std::get<fika::file_job_shm>(msg);
+      auto r = q.process_results(file_job);
+      fika::ipc_message msg_res{r.second};
+      return std::make_pair(r.first, msg_res);
+    };
 
-  auto handler = [&q](const fika::ipc_message &msg)
-      -> std::pair<std::string, fika::ipc_message> {
-    // fika::log::log_info("mgs type: {}, msg id: {}", msg.type, msg.job.id);
-    auto r = q.process_results(msg.job);
-    fika::ipc_message msg_res{r.second};
-    return std::make_pair(r.first, msg_res);
-  };
+    fika::Service<fika::ipc_message, fika::ipc_message> service(
+        std::make_unique<fika::MsgQueueReceiver<fika::ipc_message>>(
+            "result_queue"),
+        senders, handler);
 
-  fika::Service<fika::ipc_message, fika::ipc_message> service(
-      std::make_unique<fika::MsgQueueReceiver<fika::ipc_message>>(
-          "result_queue"),
-      senders, handler);
+    service.start();
 
-  service.start();
-
-  service.stop();
+    service.stop();
+  } catch (const std::exception &e) {
+    fika::log::log_info("Service failed: {}", e.what());
+    return 1;
+  }
 
   return 0;
 }

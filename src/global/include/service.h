@@ -40,7 +40,7 @@ namespace fika {
 template <typename Job, typename Result>
 class Service {
  public:
-  using JobHandler = std::function<std::pair<std::string, Result>(const Job &)>;
+  using JobHandler = std::function<std::pair<std::string, Result>(const Job&)>;
 
   Service(
       std::unique_ptr<MsgQueueReceiver<Job>> receiver,
@@ -48,11 +48,14 @@ class Service {
       JobHandler handler,
       std::size_t threadCount = boost::thread::hardware_concurrency())
       : receiver_(std::move(receiver)),
-        senders_(senders),
+        senders_(std::move(senders)),
         handler_(std::move(handler)),
         pool_(threadCount),
         running_(false) {}
-
+  Service(const Service&) = delete;
+  Service(Service&&) = delete;
+  Service& operator=(const Service&) = delete;
+  Service& operator=(Service&&) = delete;
   ~Service() { stop(); }
 
   void start() {
@@ -61,9 +64,17 @@ class Service {
   }
 
   void stop() {
-    if (!running_) return;
+    if (!running_) {
+      return;
+    }
     running_ = false;
-    receiverThread_.join();
+    if (receiverThread_.joinable()) {
+      try {
+        receiverThread_.join();
+      } catch (const std::exception& e) {
+        log::log_error("Error while joining thread: {}", e.what());
+      }
+    }
   }
 
  private:
@@ -71,32 +82,27 @@ class Service {
     while (running_) {
       Job msg{};
       receiver_->receive(msg);
-      // Detect poison pill
-      switch (msg.type) {
-        case MessageType::JOB:
-          boost::asio::post(pool_, [this, msg] {
-            auto [queue, result] = handler_(msg);
-            auto it = senders_.find(queue);
-            if (it != senders_.end()) {
-              log::log_info("sending to {} queue", queue);
-              it->second->send(result);
-            } else {
-              // optional: log missing queue mapping
-            }
-          });
-          break;
-        case MessageType::HEARTBEAT:
-          // handle_heartbeat(msg.heartbeat);
-          break;
-        case MessageType::COMMAND:
-          log::log_info("received poison pill - stopping");
-          break;  // break out of receive loop, but don't kill pool yet
-      }
-      // if (job.stop) {
-      //   log::log_info("received poison pill - stopping");
 
-      //   break;  // break out of receive loop, but don't kill pool yet
-      // }
+      std::visit(
+          [this](auto&& inner) {
+            using T = std::decay_t<decltype(inner)>;
+
+            if constexpr (std::is_same_v<T, file_job_shm>) {
+              boost::asio::post(pool_, [this, job = inner] {
+                auto [queue, result] = handler_(job);
+                if (auto iter = senders_.find(queue); iter != senders_.end()) {
+                  log::log_info("sending to {} queue", queue);
+                  iter->second->send(result);
+                } else {
+                  log::log_warn("no sender for queue {}", queue);
+                }
+              });
+            } else if constexpr (std::is_same_v<T, int>) {
+              log::log_info("received poison pill - stopping");
+              running_ = false;
+            }
+          },
+          msg);
     }
     pool_.join();
   }

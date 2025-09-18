@@ -17,6 +17,7 @@
  */
 
 #pragma once
+#include <span>
 #include <string>
 
 #include "commands.h"  // for fika::CommandType
@@ -30,6 +31,6 @@ struct ParsedCommand {
 
 /// Parse argc/argv and return a ParsedCommand.
 /// Throws std::invalid_argument or boost::program_options::error on failure.
-ParsedCommand parse_command_line(int argc, char *argv[]);
+ParsedCommand parse_command_line(std::span<char*> args);
 
 }  // namespace fika::cli
