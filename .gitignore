@@ -81,7 +81,8 @@ CMakeUserPresets.json
 
 build/
 .cache/
-src/test_tools/synthetic_files/test.*
+src/test_tools/synthetic_files/test*
+
 # End of https://www.toptal.com/developers/gitignore/api/c++,cmake,visualstudiocode
 
 # Created by https://www.toptal.com/developers/gitignore/api/python
