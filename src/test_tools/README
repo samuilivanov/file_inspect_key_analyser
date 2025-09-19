@@ -1,0 +1,19 @@
+# FileSource / Synthetic File Sender
+
+`send_file.py` is a Python script to send files to a Fika ingest service. It can either send an **existing file** or generate **synthetic files** of different types and send them automatically.
+
+## Features
+
+- Send any existing file via HTTP POST.  
+- Generate synthetic files (PNG, JPG, GIF, BMP, PDF, DOCX, XLSX, ZIP, WAV, MP4, PPTX) and send them.  
+- Optional URL argument; defaults to `http://0.0.0.0:8080/upload`.  
+- Automatic creation of `synthetic_files/` folder for generated files.  
+- Skips optional file types (MP4, PPTX) if dependencies (`moviepy`, `python-pptx`) are not installed.
+
+## Requirements
+
+- Python 3.10+  
+- Dependencies:
+
+```bash
+pip install Pillow reportlab python-docx openpyxl moviepy python-pptx requests

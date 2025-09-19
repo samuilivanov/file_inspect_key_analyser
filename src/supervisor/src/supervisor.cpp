@@ -38,7 +38,7 @@ namespace {
 const std::map<std::string, std::string> binary_to_queue = {
     {"detect", DETECT_MESSAGE_QUEUE.data()},
     {"parse", PARSE_MESSAGE_QUEUE.data()},
-    {"mq", QM_MESSAGE_QUEUE.data()}};
+    {"qm", QM_MESSAGE_QUEUE.data()}};
 
 }  // namespace
 
@@ -78,35 +78,26 @@ void supervisor::monitor_once() {
 }
 
 void supervisor::stop_workers(const std::string &service_name) {
-  if (service_name.empty()) {
-    for (auto &w : workers_) {
-      w.w->stop();
-      w.state = WorkerState::Stopped;
-    }
-    reset_queues();
-  } else {
-    for (auto &w : workers_) {
-      if (w.w->name() == service_name) {
-        // 1. enqueue poison pill
-        auto queue = binary_to_queue.find(service_name);
-        if (queue != binary_to_queue.end()) {
-          queue_mgr_->send_stop_job(queue->second);
-          log::log_info("Sending poison pill to {} on message queue {}",
-                        queue->first, queue->second);
-        } else {
-          log::log_warn(
-              "Message queue for poison pill for service {} not found. "
-              "Continue...",
-              service_name);
-          continue;
-          ;
-        }
-
-        // 2. wait for graceful shutdown
-        w.w->wait();
-
-        w.state = WorkerState::Stopped;
+  for (auto &w : workers_) {
+    if (w.w->name() == service_name || service_name.empty()) {
+      // 1. enqueue poison pill
+      auto queue = binary_to_queue.find(w.w->name());
+      if (queue != binary_to_queue.end()) {
+        queue_mgr_->send_stop_job(queue->second);
+        log::log_info("Sending poison pill to {} on message queue {}",
+                      queue->first, queue->second);
+      } else {
+        log::log_warn(
+            "Message queue for poison pill for service {} not found. "
+            "Continue...",
+            service_name);
+        continue;
       }
+
+      // 2. wait for graceful shutdown
+      w.w->wait();
+
+      w.state = WorkerState::Stopped;
     }
   }
 }
