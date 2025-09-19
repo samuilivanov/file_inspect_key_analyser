@@ -15,11 +15,15 @@
  */
 
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-#include "supervisor.h"
-#include "worker.h"
 #include <doctest/doctest.h>
+
 #include <memory>
 #include <vector>
+
+#include "ipc_queue_manager.h"
+#include "queue_descriptor.h"
+#include "supervisor.h"
+#include "worker.h"
 
 using namespace fika;
 
@@ -54,8 +58,7 @@ struct mock_queue_manager : public ipc_queue_manager {
 };
 
 TEST_CASE("Supervisor creates workers correctly") {
-
-  std::vector<mock_child *> mocks; // raw pointers for assertions
+  std::vector<mock_child *> mocks;  // raw pointers for assertions
   mock_queue_manager mock_mgr;
   std::vector<queue_descriptor> queues = {{"q1", 10, 128}, {"q2", 20, 256}};
 
@@ -64,26 +67,24 @@ TEST_CASE("Supervisor creates workers correctly") {
     return std::make_unique<worker>(
         [&mocks]() -> std::unique_ptr<child_process> {
           auto m = std::make_unique<mock_child>();
-          mocks.push_back(m.get()); // track the mock for assertions
-          return m;                 // ownership transferred to worker
+          mocks.push_back(m.get());  // track the mock for assertions
+          return m;                  // ownership transferred to worker
         });
   };
 
   supervisor sup(
       {worker_factory, worker_factory}, queues,
-      std::make_shared<mock_queue_manager>(mock_mgr)); // create 2 workers
+      std::make_shared<mock_queue_manager>(mock_mgr));  // create 2 workers
   CHECK(sup.get_workers().size() == 2);
-  CHECK(mocks.empty()); // not started yet
+  CHECK(mocks.empty());  // not started yet
 
   sup.start_workers();
-  CHECK(mocks.size() == 2); // children created
-  for (auto &m : mocks)
-    CHECK(m->running());
+  CHECK(mocks.size() == 2);  // children created
+  for (auto &m : mocks) CHECK(m->running());
 }
 
 TEST_CASE("Supervisor monitor_once restarts dead workers") {
-
-  std::vector<mock_child *> mocks; // raw pointers for assertions
+  std::vector<mock_child *> mocks;  // raw pointers for assertions
   mock_queue_manager mock_mgr;
 
   std::vector<queue_descriptor> queues = {{"q1", 10, 128}, {"q2", 20, 256}};
@@ -92,8 +93,8 @@ TEST_CASE("Supervisor monitor_once restarts dead workers") {
     return std::make_unique<worker>(
         [&mocks]() -> std::unique_ptr<child_process> {
           auto m = std::make_unique<mock_child>();
-          mocks.push_back(m.get()); // track the mock for assertions
-          return m;                 // ownership transferred to worker
+          mocks.push_back(m.get());  // track the mock for assertions
+          return m;                  // ownership transferred to worker
         });
   };
 
@@ -105,7 +106,7 @@ TEST_CASE("Supervisor monitor_once restarts dead workers") {
   // Simulate dead worker
   mocks[0]->alive = false;
 
-  sup.monitor_once(); // restart dead workers
+  sup.monitor_once();  // restart dead workers
 
   // New mock created
   // TODO (samuil) not sure how to fix this
@@ -115,7 +116,7 @@ TEST_CASE("Supervisor monitor_once restarts dead workers") {
 }
 
 TEST_CASE("Supervisor multiple dead workers get restarted") {
-  std::vector<mock_child *> mocks; // raw pointers for assertions
+  std::vector<mock_child *> mocks;  // raw pointers for assertions
   mock_queue_manager mock_mgr;
 
   std::vector<queue_descriptor> queues = {{"q1", 10, 128}, {"q2", 20, 256}};
@@ -124,8 +125,8 @@ TEST_CASE("Supervisor multiple dead workers get restarted") {
     return std::make_unique<worker>(
         [&mocks]() -> std::unique_ptr<child_process> {
           auto m = std::make_unique<mock_child>();
-          mocks.push_back(m.get()); // track the mock for assertions
-          return m;                 // ownership transferred to worker
+          mocks.push_back(m.get());  // track the mock for assertions
+          return m;                  // ownership transferred to worker
         });
   };
 
@@ -139,7 +140,7 @@ TEST_CASE("Supervisor multiple dead workers get restarted") {
   mocks[1]->alive = false;
 
   sup.monitor_once();
-  CHECK(mocks.size() == 5); // two new mocks created
+  CHECK(mocks.size() == 5);  // two new mocks created
   CHECK(mocks[3]->running());
   CHECK(mocks[4]->running());
 }
@@ -150,7 +151,7 @@ TEST_CASE("Supervisor resets and creates queues") {
 
   std::vector<queue_descriptor> queues = {{"q1", 10, 128}, {"q2", 20, 256}};
 
-  std::vector<supervisor::worker_factory_t> factories; // empty for this test
+  std::vector<supervisor::worker_factory_t> factories;  // empty for this test
 
   supervisor sup(factories, queues, mock_mgr);
 

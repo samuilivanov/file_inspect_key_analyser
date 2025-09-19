@@ -134,8 +134,8 @@ void supervisor::handle_command(CommandType cmd_type,
 void supervisor::run() {
   while (true) {
     CommandMessage msg;
-    std::size_t recv_size;
-    unsigned int priority;
+    std::size_t recv_size{};
+    unsigned int priority{};
 
     if (mq_receive->try_receive(&msg, sizeof(msg), recv_size, priority)) {
       handle_command(msg.cmd_, msg.service());

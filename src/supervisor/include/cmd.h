@@ -21,11 +21,11 @@
 #include <string>
 
 namespace fika {
-class supervisor;
+class supervisor_inter;
 class cmd {
  public:
   virtual ~cmd() = default;
-  virtual void execute(supervisor *sup,
+  virtual void execute(supervisor_inter *sup,
                        const std::string &service_name = "") = 0;
 };
 

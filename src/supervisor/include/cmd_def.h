@@ -27,21 +27,24 @@
 namespace fika::detail {
 class start_command : public cmd {
  public:
-  void execute(supervisor *sup, const std::string &service_name = "") override {
+  void execute(supervisor_inter *sup,
+               const std::string &service_name = "") override {
     sup->start_workers(service_name);  // optionally filter by service_name
   }
 };
 
 class stop_command : public cmd {
  public:
-  void execute(supervisor *sup, const std::string &service_name = "") override {
+  void execute(supervisor_inter *sup,
+               const std::string &service_name = "") override {
     sup->stop_workers(service_name);  // you would add stop_workers method
   }
 };
 
 class restart_command : public cmd {
  public:
-  void execute(supervisor *sup, const std::string &service_name = "") override {
+  void execute(supervisor_inter *sup,
+               const std::string &service_name = "") override {
     sup->stop_workers(service_name);
     sup->start_workers(service_name);
   }
@@ -49,7 +52,8 @@ class restart_command : public cmd {
 
 class ping_command : public cmd {
  public:
-  void execute(supervisor *sup, const std::string &service_name = "") override {
+  void execute(supervisor_inter *sup,
+               const std::string &service_name = "") override {
     CommandResponse msg;
     msg.success = true;
     std::strcpy(msg.message.data(), "pong");

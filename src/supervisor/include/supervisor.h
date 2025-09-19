@@ -33,7 +33,30 @@
 
 namespace fika {
 
-class supervisor {
+struct supervisor_inter {
+  supervisor_inter() = default;
+  virtual ~supervisor_inter() = default;
+  supervisor_inter(const supervisor_inter &) = delete;
+  supervisor_inter(supervisor_inter &&) = delete;
+  supervisor_inter &operator=(const supervisor_inter &) = delete;
+  supervisor_inter &operator=(supervisor_inter &&) = delete;
+
+  virtual void run() = 0;
+  virtual void start_workers(const std::string &service_name = "") = 0;
+  virtual void stop_workers(const std::string &service_name = "") = 0;
+  virtual void handle_command(CommandType cmd_type,
+                              const std::string &service_name = "") = 0;
+  virtual void reset_queues() = 0;
+  virtual void create_queues() = 0;
+  [[nodiscard]] virtual std::vector<worker_entity> &get_workers() = 0;
+
+  virtual void monitor_once() = 0;
+  virtual void send_pong(const CommandResponse &msg) = 0;
+
+  virtual void register_commands() = 0;
+};
+
+class supervisor : public supervisor_inter {
  public:
   using worker_factory_t = std::function<std::unique_ptr<worker>()>;
 
@@ -41,27 +64,21 @@ class supervisor {
                       std::vector<fika::queue_descriptor> queues,
                       std::shared_ptr<ipc_queue_manager> queue_mgr);
 
-  virtual ~supervisor() = default;
-  void run();
+  void run() override;
 
-  virtual void start_workers(const std::string &service_name = "");
-  virtual void stop_workers(const std::string &service_name = "");
-  virtual void handle_command(CommandType cmd_type,
-                              const std::string &service_name = "");
-  virtual void reset_queues();
-  virtual void create_queues();
-  std::vector<queue_descriptor> queues_;
-
-  virtual const std::vector<worker_entity> &get_workers() const {
-    return workers_;
-  }
-
-  virtual void monitor_once();
-  virtual void send_pong(const CommandResponse &msg);
-
-  virtual void register_commands();
+  void start_workers(const std::string &service_name = "") override;
+  void stop_workers(const std::string &service_name = "") override;
+  void handle_command(CommandType cmd_type,
+                      const std::string &service_name = "") override;
+  void reset_queues() override;
+  void create_queues() override;
+  std::vector<worker_entity> &get_workers() override { return workers_; }
+  void monitor_once() override;
+  void send_pong(const CommandResponse &msg) override;
+  void register_commands() override;
 
  private:
+  std::vector<queue_descriptor> queues_;
   std::vector<worker_entity> workers_;
   std::shared_ptr<ipc_queue_manager> queue_mgr_;
   std::map<CommandType, std::unique_ptr<cmd>> commands_;
