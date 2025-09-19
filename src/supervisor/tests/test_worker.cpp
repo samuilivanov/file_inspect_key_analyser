@@ -15,9 +15,10 @@
  */
 
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
+
 #include "worker.h"
 #include "worker_configs.h"
-#include <doctest/doctest.h>
 
 struct mock_child : public fika::child_process {
   bool alive = true;

@@ -26,9 +26,6 @@
 #include <string>
 #include <vector>
 
-#include "msg.h"
-#include "worker_configs.h"
-
 #include <boost/asio.hpp>
 #include <boost/process.hpp>
 // clang-format on

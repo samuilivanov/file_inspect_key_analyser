@@ -62,7 +62,8 @@ template <typename... Ts>
 struct log_debug {
   log_debug(const std::string &fmt, Ts &&...template_string,
             const std::source_location &loc = std::source_location::current()) {
-    std::string msg = fmt::vformat(fmt, fmt::make_format_args(template_string...));
+    std::string msg =
+        fmt::vformat(fmt, fmt::make_format_args(template_string...));
     BOOST_LOG_TRIVIAL(debug) << fmt::format(
         "[{}:{}] {}", filename_only(loc.file_name()), loc.line(), msg);
   }
@@ -75,7 +76,8 @@ template <typename... Ts>
 struct log_info {
   log_info(const std::string &fmt, Ts &&...template_string,
            const std::source_location &loc = std::source_location::current()) {
-    std::string msg = fmt::vformat(fmt, fmt::make_format_args(template_string...));
+    std::string msg =
+        fmt::vformat(fmt, fmt::make_format_args(template_string...));
     BOOST_LOG_TRIVIAL(info) << fmt::format(
         "[{}:{}] {}", filename_only(loc.file_name()), loc.line(), msg);
   }
@@ -88,7 +90,8 @@ template <typename... Ts>
 struct log_warn {
   log_warn(const std::string &fmt, Ts &&...template_string,
            const std::source_location &loc = std::source_location::current()) {
-    std::string msg = fmt::vformat(fmt, fmt::make_format_args(template_string...));
+    std::string msg =
+        fmt::vformat(fmt, fmt::make_format_args(template_string...));
     BOOST_LOG_TRIVIAL(warning) << fmt::format(
         "[{}:{}] {}", filename_only(loc.file_name()), loc.line(), msg);
   }
@@ -101,7 +104,8 @@ template <typename... Ts>
 struct log_error {
   log_error(const std::string &fmt, Ts &&...template_string,
             const std::source_location &loc = std::source_location::current()) {
-    std::string msg = fmt::vformat(fmt, fmt::make_format_args(template_string...));
+    std::string msg =
+        fmt::vformat(fmt, fmt::make_format_args(template_string...));
     BOOST_LOG_TRIVIAL(error) << fmt::format(
         "[{}:{}] {}", filename_only(loc.file_name()), loc.line(), msg);
   }
@@ -115,7 +119,8 @@ struct log_critical {
   log_critical(
       const std::string &fmt, Ts &&...template_string,
       const std::source_location &loc = std::source_location::current()) {
-    std::string msg = fmt::vformat(fmt, fmt::make_format_args(template_string...));
+    std::string msg =
+        fmt::vformat(fmt, fmt::make_format_args(template_string...));
     BOOST_LOG_TRIVIAL(fatal) << fmt::format(
         "[{}:{}] {}", filename_only(loc.file_name()), loc.line(), msg);
   }

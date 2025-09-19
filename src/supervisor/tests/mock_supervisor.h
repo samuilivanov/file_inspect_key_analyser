@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 
-#include "supervisor.h"
+#include "supervisor_inter.h"
 struct test_supervisor : public fika::supervisor_inter {
   std::vector<std::string> started;
   std::vector<std::string> stopped;

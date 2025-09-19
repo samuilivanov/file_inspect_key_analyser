@@ -26,9 +26,9 @@ struct file_detector {
   virtual ~file_detector() = default;
   file_detector() = default;
   file_detector(const file_detector &) = delete;
-  file_detector(file_detector &&) noexcept = default;
+  file_detector(file_detector &&) noexcept = delete;
   file_detector &operator=(const file_detector &) = delete;
-  file_detector &operator=(file_detector &&) noexcept = default;
+  file_detector &operator=(file_detector &&) noexcept = delete;
   virtual std::string detect(const std::string &filepath) = 0;
   [[nodiscard]] virtual std::string name()
       const = 0;  // source identifier, e.g., "libmagic"

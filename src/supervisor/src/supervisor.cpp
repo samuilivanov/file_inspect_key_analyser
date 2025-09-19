@@ -35,7 +35,7 @@
 
 namespace {
 
-std::map<std::string, std::string> binary_to_queue = {
+const std::map<std::string, std::string> binary_to_queue = {
     {"detect", DETECT_MESSAGE_QUEUE.data()},
     {"parse", PARSE_MESSAGE_QUEUE.data()},
     {"mq", QM_MESSAGE_QUEUE.data()}};
@@ -44,10 +44,10 @@ std::map<std::string, std::string> binary_to_queue = {
 
 namespace fika {
 
-supervisor::supervisor(std::vector<worker_factory_t> factories,
+supervisor::supervisor(const std::vector<worker_factory_t> &factories,
                        std::vector<queue_descriptor> queues,
                        std::shared_ptr<ipc_queue_manager> queue_mgr)
-    : queues_(queues), queue_mgr_(queue_mgr) {
+    : queues_(std::move(queues)), queue_mgr_(std::move(queue_mgr)) {
   mq_receive = std::make_unique<boost::interprocess::message_queue>(
       boost::interprocess::open_or_create, "fika_supervisor_mq", 100,
       sizeof(CommandMessage));
@@ -88,7 +88,19 @@ void supervisor::stop_workers(const std::string &service_name) {
     for (auto &w : workers_) {
       if (w.w->name() == service_name) {
         // 1. enqueue poison pill
-        queue_mgr_->send_stop_job(binary_to_queue[service_name]);
+        auto queue = binary_to_queue.find(service_name);
+        if (queue != binary_to_queue.end()) {
+          queue_mgr_->send_stop_job(queue->second);
+          log::log_info("Sending poison pill to {} on message queue {}",
+                        queue->first, queue->second);
+        } else {
+          log::log_warn(
+              "Message queue for poison pill for service {} not found. "
+              "Continue...",
+              service_name);
+          continue;
+          ;
+        }
 
         // 2. wait for graceful shutdown
         w.w->wait();

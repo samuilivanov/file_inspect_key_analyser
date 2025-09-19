@@ -22,7 +22,6 @@
 #include <string>
 
 #include "cmd.h"
-#include "supervisor.h"
 
 namespace fika::detail {
 class start_command : public cmd {

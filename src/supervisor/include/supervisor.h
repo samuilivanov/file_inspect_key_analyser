@@ -29,38 +29,16 @@
 #include "commands.h"
 #include "ipc_queue_manager.h"
 #include "queue_descriptor.h"
+#include "supervisor_inter.h"
 #include "worker.h"
 
 namespace fika {
-
-struct supervisor_inter {
-  supervisor_inter() = default;
-  virtual ~supervisor_inter() = default;
-  supervisor_inter(const supervisor_inter &) = delete;
-  supervisor_inter(supervisor_inter &&) = delete;
-  supervisor_inter &operator=(const supervisor_inter &) = delete;
-  supervisor_inter &operator=(supervisor_inter &&) = delete;
-
-  virtual void run() = 0;
-  virtual void start_workers(const std::string &service_name = "") = 0;
-  virtual void stop_workers(const std::string &service_name = "") = 0;
-  virtual void handle_command(CommandType cmd_type,
-                              const std::string &service_name = "") = 0;
-  virtual void reset_queues() = 0;
-  virtual void create_queues() = 0;
-  [[nodiscard]] virtual std::vector<worker_entity> &get_workers() = 0;
-
-  virtual void monitor_once() = 0;
-  virtual void send_pong(const CommandResponse &msg) = 0;
-
-  virtual void register_commands() = 0;
-};
 
 class supervisor : public supervisor_inter {
  public:
   using worker_factory_t = std::function<std::unique_ptr<worker>()>;
 
-  explicit supervisor(std::vector<worker_factory_t> factories,
+  explicit supervisor(const std::vector<worker_factory_t> &factories,
                       std::vector<fika::queue_descriptor> queues,
                       std::shared_ptr<ipc_queue_manager> queue_mgr);
 

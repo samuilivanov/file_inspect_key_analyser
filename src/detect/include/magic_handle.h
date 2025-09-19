@@ -39,14 +39,8 @@ class magic_handle : public file_detector {
   ~magic_handle() override;
   magic_handle(const magic_handle& other) = delete;
   magic_handle& operator=(const magic_handle&) = delete;
-  magic_handle(magic_handle&& other) noexcept : handle_(other.handle_) {
-    other.handle_ = nullptr;
-  }
-  magic_handle& operator=(magic_handle&& other) noexcept {
-    this->handle_ = other.handle_;
-    other.handle_ = nullptr;
-    return *this;
-  }
+  magic_handle(magic_handle&& other) = delete;
+  magic_handle& operator=(magic_handle&& other) = delete;
   std::string detect(const std::string& filepath) override;
   [[nodiscard]] std::string name() const override {
     return "libmagic";

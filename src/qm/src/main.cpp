@@ -63,7 +63,7 @@ int main(int argc, char const *argv[]) {
     auto handler = [&q](const fika::ipc_message &msg)
         -> std::pair<std::string, fika::ipc_message> {
       // fika::log::log_info("mgs type: {}, msg id: {}", msg.type, msg.job.id);
-      auto &file_job = std::get<fika::file_job_shm>(msg);
+      const auto &file_job = std::get<fika::file_job_shm>(msg);
       auto r = q.process_results(file_job);
       fika::ipc_message msg_res{r.second};
       return std::make_pair(r.first, msg_res);

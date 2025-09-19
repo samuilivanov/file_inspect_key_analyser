@@ -20,8 +20,9 @@
 #define SRC_SUPERVISOR_INCLUDE_CMD_H_
 #include <string>
 
+#include "supervisor_inter.h"
+
 namespace fika {
-class supervisor_inter;
 class cmd {
  public:
   virtual ~cmd() = default;
