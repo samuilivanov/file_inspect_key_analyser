@@ -33,12 +33,9 @@ int main(int argc, char const *argv[]) {
   fika::log::msg_logger_init();
   fika::log::log_info("Starting detect service");
   try {
-    std::map<std::string,
-             std::shared_ptr<fika::MsgQueueSender<fika::ipc_message>>>
-        senders;
+    std::map<std::string, std::shared_ptr<fika::queue_sender>> senders;
     senders.emplace("qm",
-                    std::make_shared<fika::MsgQueueSender<fika::ipc_message>>(
-                        "result_queue"));
+                    std::make_shared<fika::MsgQueueSender>("result_queue"));
 
     std::vector<std::unique_ptr<fika::file_detector>> detectors;
 
@@ -68,10 +65,9 @@ int main(int argc, char const *argv[]) {
       return std::make_pair("qm", res);
     };
 
-    fika::Service<fika::ipc_message, fika::ipc_message> service(
-        std::make_unique<fika::MsgQueueReceiver<fika::ipc_message>>(
-            "job_queue_detector"),
-        senders, handler);
+    fika::Service service(
+        std::make_unique<fika::MsgQueueReceiver>("job_queue_detector"), senders,
+        handler);
 
     service.start();
 

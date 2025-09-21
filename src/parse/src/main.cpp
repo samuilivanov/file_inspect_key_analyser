@@ -17,8 +17,6 @@
  */
 
 // clang-format off
-#include <thread>
-
 #include "ipc_client.h"
 #include "msg.h"
 #include "parser_registry.h"
@@ -47,12 +45,9 @@ int main() {
   fika::log::msg_logger_init();
   fika::log::log_info("Starting parser service");
   try {
-    std::map<std::string,
-             std::shared_ptr<fika::MsgQueueSender<fika::ipc_message>>>
-        senders;
+    std::map<std::string, std::shared_ptr<fika::queue_sender>> senders;
     senders.emplace("qm",
-                    std::make_shared<fika::MsgQueueSender<fika::ipc_message>>(
-                        "result_queue"));
+                    std::make_shared<fika::MsgQueueSender>("result_queue"));
     fika::parser_registry parsers;
 
     // The actual work to be done per job
@@ -66,10 +61,9 @@ int main() {
       return std::make_pair("qm", response_msg);
     };
 
-    fika::Service<fika::ipc_message, fika::ipc_message> service(
-        std::make_unique<fika::MsgQueueReceiver<fika::ipc_message>>(
-            "job_queue_parse"),
-        senders, handler);
+    fika::Service service(
+        std::make_unique<fika::MsgQueueReceiver>("job_queue_parse"), senders,
+        handler);
 
     service.start();
 

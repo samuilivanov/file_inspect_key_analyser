@@ -52,7 +52,7 @@ void msg_logger_init(const std::string &log_file) {
     file_sink->set_formatter(
         expr::stream << "["
                      << expr::format_date_time<boost::posix_time::ptime>(
-                            "TimeStamp", "%Y-%m-%d %H:%M:%S")
+                            "TimeStamp", "%H:%M:%S")
                      << "] [" << logging::trivial::severity << "] ["
                      << expr::attr<std::string>("ProcessName") << "] "
                      << expr::smessage);

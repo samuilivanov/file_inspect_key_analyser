@@ -20,13 +20,9 @@
 #define SRC_GLOBAL_INCLUDE_IPC_CLIENT_H_
 
 // clang-format off
-#include <chrono>
-#include <memory>
-#include <optional>
 #include <string>
 
 #include "file_job.h"
-#include "message_queues.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/interprocess/ipc/message_queue.hpp>
@@ -34,27 +30,41 @@
 
 namespace fika {
 
-template <typename Job>
-class MsgQueueReceiver {
+struct queue_receiver {
+  virtual ~queue_receiver() = default;
+  queue_receiver() = default;
+  queue_receiver(const queue_receiver &) = delete;
+  queue_receiver(queue_receiver &&) = delete;
+  queue_receiver &operator=(const queue_receiver &) = delete;
+  queue_receiver &operator=(queue_receiver &&) = delete;
+  virtual void receive(ipc_message &job) = 0;
+};
+
+struct queue_sender {
+  virtual ~queue_sender() = default;
+  queue_sender() = default;
+  queue_sender(const queue_sender &) = delete;
+  queue_sender(queue_sender &&) = delete;
+  queue_sender &operator=(const queue_sender &) = delete;
+  queue_sender &operator=(queue_sender &&) = delete;
+  virtual void send(const ipc_message &job) = 0;
+};
+
+class MsgQueueReceiver : public queue_receiver {
  public:
   explicit MsgQueueReceiver(const std::string &queue_name)
       : mq_recv_(boost::interprocess::open_only, queue_name.c_str()) {}
-  void receive(Job &job) {
-    size_t recv_size{};
-    unsigned int priority{};
-    mq_recv_.receive(&job, sizeof(Job), recv_size, priority);
-  }
+  void receive(ipc_message &job) override;
 
  private:
   boost::interprocess::message_queue mq_recv_;
 };
 
-template <typename Result>
-class MsgQueueSender {
+class MsgQueueSender : public queue_sender {
  public:
   explicit MsgQueueSender(const std::string &queue_name)
       : mq_send_(boost::interprocess::open_only, queue_name.c_str()) {}
-  void send(const Result &result) { mq_send_.send(&result, sizeof(Result), 0); }
+  void send(const ipc_message &result) override;
 
  private:
   boost::interprocess::message_queue mq_send_;

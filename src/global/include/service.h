@@ -22,14 +22,13 @@
 // clang-format off
 #include <atomic>
 #include <functional>
-#include <iostream>
 #include <map>
 #include <utility>
 #include <memory>
 #include <string>
 
+#include "file_job.h"
 #include "ipc_client.h"
-#include "msg.h"
 
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
@@ -37,78 +36,30 @@
 
 namespace fika {
 
-template <typename Job, typename Result>
 class Service {
  public:
-  using JobHandler = std::function<std::pair<std::string, Result>(const Job&)>;
+  using JobHandler =
+      std::function<std::pair<std::string, ipc_message>(const ipc_message&)>;
 
-  Service(
-      std::unique_ptr<MsgQueueReceiver<Job>> receiver,
-      std::map<std::string, std::shared_ptr<MsgQueueSender<Result>>> senders,
-      JobHandler handler,
-      std::size_t threadCount = boost::thread::hardware_concurrency())
-      : receiver_(std::move(receiver)),
-        senders_(std::move(senders)),
-        handler_(std::move(handler)),
-        pool_(threadCount),
-        running_(false) {}
+  Service(std::unique_ptr<queue_receiver> receiver,
+          std::map<std::string, std::shared_ptr<queue_sender>> senders,
+          JobHandler handler,
+          std::size_t threadCount = boost::thread::hardware_concurrency());
   Service(const Service&) = delete;
   Service(Service&&) = delete;
   Service& operator=(const Service&) = delete;
   Service& operator=(Service&&) = delete;
   ~Service() { stop(); }
 
-  void start() {
-    running_ = true;
-    receiveLoop();
-  }
+  void start();
 
-  void stop() {
-    if (!running_) {
-      return;
-    }
-    running_ = false;
-    if (receiverThread_.joinable()) {
-      try {
-        receiverThread_.join();
-      } catch (const std::exception& e) {
-        log::log_error("Error while joining thread: {}", e.what());
-      }
-    }
-  }
+  void stop();
 
  private:
-  void receiveLoop() {
-    while (running_) {
-      Job msg{};
-      receiver_->receive(msg);
+  void receiveLoop();
 
-      std::visit(
-          [this](auto&& inner) {
-            using T = std::decay_t<decltype(inner)>;
-
-            if constexpr (std::is_same_v<T, file_job_shm>) {
-              boost::asio::post(pool_, [this, job = inner] {
-                auto [queue, result] = handler_(job);
-                if (auto iter = senders_.find(queue); iter != senders_.end()) {
-                  log::log_info("sending to {} queue", queue);
-                  iter->second->send(result);
-                } else {
-                  log::log_warn("no sender for queue {}", queue);
-                }
-              });
-            } else if constexpr (std::is_same_v<T, int>) {
-              log::log_info("received poison pill - stopping");
-              running_ = false;
-            }
-          },
-          msg);
-    }
-    pool_.join();
-  }
-
-  std::unique_ptr<MsgQueueReceiver<Job>> receiver_;
-  std::map<std::string, std::shared_ptr<MsgQueueSender<Result>>> senders_;
+  std::unique_ptr<queue_receiver> receiver_;
+  std::map<std::string, std::shared_ptr<queue_sender>> senders_;
   JobHandler handler_;
   boost::asio::thread_pool pool_;
   boost::thread receiverThread_;

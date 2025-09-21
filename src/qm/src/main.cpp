@@ -47,15 +47,11 @@ int main(int argc, char const *argv[]) {
   fika::log::log_info("Starting qm");
   try {
     /* code */
-    std::map<std::string,
-             std::shared_ptr<fika::MsgQueueSender<fika::ipc_message>>>
-        senders;
+    std::map<std::string, std::shared_ptr<fika::queue_sender>> senders;
     senders.emplace("parse",
-                    std::make_shared<fika::MsgQueueSender<fika::ipc_message>>(
-                        "job_queue_parse"));
-    senders.emplace("detect",
-                    std::make_shared<fika::MsgQueueSender<fika::ipc_message>>(
-                        "job_queue_detector"));
+                    std::make_shared<fika::MsgQueueSender>("job_queue_parse"));
+    senders.emplace(
+        "detect", std::make_shared<fika::MsgQueueSender>("job_queue_detector"));
 
     fika::qm q;
     setup();
@@ -69,10 +65,9 @@ int main(int argc, char const *argv[]) {
       return std::make_pair(r.first, msg_res);
     };
 
-    fika::Service<fika::ipc_message, fika::ipc_message> service(
-        std::make_unique<fika::MsgQueueReceiver<fika::ipc_message>>(
-            "result_queue"),
-        senders, handler);
+    fika::Service service(
+        std::make_unique<fika::MsgQueueReceiver>("result_queue"), senders,
+        handler);
 
     service.start();
 
