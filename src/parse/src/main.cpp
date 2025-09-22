@@ -21,6 +21,7 @@
 #include "msg.h"
 #include "parser_registry.h"
 #include "service.h"
+#include "qn_rslv.h"
 
 #include <boost/asio/post.hpp>
 #include <boost/asio/thread_pool.hpp>
@@ -46,8 +47,10 @@ int main() {
   fika::log::log_info("Starting parser service");
   try {
     std::map<std::string, std::shared_ptr<fika::queue_sender>> senders;
-    senders.emplace("qm",
-                    std::make_shared<fika::MsgQueueSender>("result_queue"));
+    senders.emplace(
+        "qm",
+        std::make_shared<fika::MsgQueueSender>(
+            fika::util::get_inbox_queue(fika::util::make_receiver("qm"))));
     fika::parser_registry parsers;
 
     // The actual work to be done per job
@@ -62,8 +65,9 @@ int main() {
     };
 
     fika::Service service(
-        std::make_unique<fika::MsgQueueReceiver>("job_queue_parse"), senders,
-        handler);
+        std::make_unique<fika::MsgQueueReceiver>(fika::util::get_direct_queue(
+            fika::util::make_sender("qm"), fika::util::make_receiver("parse"))),
+        senders, handler);
 
     service.start();
 

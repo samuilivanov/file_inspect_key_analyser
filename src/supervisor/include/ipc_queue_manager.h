@@ -24,7 +24,6 @@
 #include <string>
 #include <memory>
 
-#include "config.h"
 #include "file_job.h"
 
 #include <boost/interprocess/ipc/message_queue.hpp>
@@ -39,29 +38,20 @@ struct ipc_queue_manager {
                       std::size_t message_size) = 0;
   virtual void send_stop_job(const std::string &queue_name) = 0;
 };
+
 namespace detail {
 
 struct boost_queue_manager : public ipc_queue_manager {
-  void remove(const std::string &name) override {
-    boost::interprocess::message_queue::remove(name.c_str());
-  }
+  void remove(const std::string &name) override;
 
   void create(const std::string &name, std::size_t max_messages,
-              std::size_t message_size) override {
-    auto mq = std::make_shared<boost::interprocess::message_queue>(
-        boost::interprocess::create_only, name.c_str(), max_messages,
-        message_size);
-    queues_[name] = mq;  // keep handle alive
-  }
-  void send_stop_job(const std::string &queue_name) override {
-    ipc_message stop_job{poison_pill{}};
-    queues_[queue_name]->send(&stop_job, sizeof(stop_job), 0);
-  }
+              std::size_t message_size) override;
+
+  void send_stop_job(const std::string &queue_name) override;
   std::map<std::string, std::shared_ptr<boost::interprocess::message_queue>>
       queues_;
 };
 }  // namespace detail
-
 }  // namespace fika
 
 #endif  // SRC_SUPERVISOR_INCLUDE_IPC_QUEUE_MANAGER_H_

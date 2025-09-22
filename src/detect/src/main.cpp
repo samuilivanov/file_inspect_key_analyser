@@ -27,6 +27,7 @@
 #include "ipc_client.h"
 #include "mime_type.h"
 #include "msg.h"
+#include "qn_rslv.h"
 #include "service.h"
 
 int main(int argc, char const *argv[]) {
@@ -34,8 +35,10 @@ int main(int argc, char const *argv[]) {
   fika::log::log_info("Starting detect service");
   try {
     std::map<std::string, std::shared_ptr<fika::queue_sender>> senders;
-    senders.emplace("qm",
-                    std::make_shared<fika::MsgQueueSender>("result_queue"));
+    senders.emplace(
+        "qm",
+        std::make_shared<fika::MsgQueueSender>(
+            fika::util::get_inbox_queue(fika::util::make_receiver("qm"))));
 
     std::vector<std::unique_ptr<fika::file_detector>> detectors;
 
@@ -66,8 +69,10 @@ int main(int argc, char const *argv[]) {
     };
 
     fika::Service service(
-        std::make_unique<fika::MsgQueueReceiver>("job_queue_detector"), senders,
-        handler);
+        std::make_unique<fika::MsgQueueReceiver>(
+            fika::util::get_direct_queue(fika::util::make_sender("qm"),
+                                         fika::util::make_receiver("detect"))),
+        senders, handler);
 
     service.start();
 

@@ -21,6 +21,7 @@
 #include "config.h"
 #include "ingestd.h"
 #include "msg.h"
+
 int main(int argc, char const *argv[]) {
   fika::log::msg_logger_init();
   fika::log::log_info("Starting qm");

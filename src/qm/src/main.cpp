@@ -18,11 +18,10 @@
 
 #include <file_job.h>
 
-#include <thread>
-
 #include "ipc_client.h"
 #include "msg.h"
 #include "qm.h"
+#include "qn_rslv.h"
 #include "service.h"
 
 namespace {
@@ -48,10 +47,14 @@ int main(int argc, char const *argv[]) {
   try {
     /* code */
     std::map<std::string, std::shared_ptr<fika::queue_sender>> senders;
-    senders.emplace("parse",
-                    std::make_shared<fika::MsgQueueSender>("job_queue_parse"));
-    senders.emplace(
-        "detect", std::make_shared<fika::MsgQueueSender>("job_queue_detector"));
+    senders.emplace("parse", std::make_shared<fika::MsgQueueSender>(
+                                 fika::util::get_direct_queue(
+                                     fika::util::make_sender("qm"),
+                                     fika::util::make_receiver("parse"))));
+    senders.emplace("detect", std::make_shared<fika::MsgQueueSender>(
+                                  fika::util::get_direct_queue(
+                                      fika::util::make_sender("qm"),
+                                      fika::util::make_receiver("detect"))));
 
     fika::qm q;
     setup();
@@ -66,8 +69,9 @@ int main(int argc, char const *argv[]) {
     };
 
     fika::Service service(
-        std::make_unique<fika::MsgQueueReceiver>("result_queue"), senders,
-        handler);
+        std::make_unique<fika::MsgQueueReceiver>(
+            fika::util::get_inbox_queue(fika::util::make_receiver("qm"))),
+        senders, handler);
 
     service.start();
 

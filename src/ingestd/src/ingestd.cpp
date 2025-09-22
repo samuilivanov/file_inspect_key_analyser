@@ -29,6 +29,7 @@
 #include "config.h"
 #include "file_job.h"
 #include "msg.h"
+#include "qn_rslv.h"
 
 // TODO(samuil): move this to util
 namespace {
@@ -56,7 +57,8 @@ namespace fika {
 
 ingestd::ingestd(std::string_view spool_dir)
     : spool_dir_(spool_dir),
-      mq_(boost::interprocess::open_only, "result_queue") {}
+      mq_(boost::interprocess::open_only,
+          util::get_inbox_queue(fika::util::make_receiver("qm")).data()) {}
 
 void ingestd::handle_file(const std::string &tmp_path,
                           const std::string &filename) {

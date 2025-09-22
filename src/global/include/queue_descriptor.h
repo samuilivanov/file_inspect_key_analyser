@@ -18,7 +18,6 @@
 
 #ifndef SRC_GLOBAL_INCLUDE_QUEUE_DESCRIPTOR_H_
 #define SRC_GLOBAL_INCLUDE_QUEUE_DESCRIPTOR_H_
-#include <ctype.h>
 
 #include <string>
 

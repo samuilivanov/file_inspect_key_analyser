@@ -1,7 +1,11 @@
 file(GLOB HEADER_LIST CONFIGURE_DEPENDS "${fika_SOURCE_DIR}/src/supervisor/include/*.h")
 
 
-add_executable(supervisor src/main.cpp src/supervisor.cpp src/worker.cpp ${HEADER_LIST})
+add_executable(supervisor src/main.cpp
+    src/supervisor.cpp
+    src/worker.cpp
+    src/ipc_queue_manager.cpp
+    ${HEADER_LIST})
 target_include_directories(supervisor PUBLIC include ../global ../global/include ${httplib_SOURCE_DIR})
 target_compile_features(supervisor PRIVATE cxx_std_23)
 
