@@ -19,6 +19,7 @@
 #ifndef SRC_UTIL_INCLUDE_QN_RSLV_H_
 #define SRC_UTIL_INCLUDE_QN_RSLV_H_
 
+#include <optional>
 #include <string>
 
 namespace fika::util {
@@ -54,6 +55,10 @@ inline std::string get_direct_queue(const std::string &from,
                                     const std::string &to) = delete;
 inline std::string get_inbox_queue(const std::string &to) = delete;
 
+std::optional<std::pair<std::string, std::string>> parse_direct_queue(
+    const std::string &queue_name);
+
+std::optional<std::string> parse_inbox_queue(const std::string &queue_name);
 }  // namespace fika::util
 
 #endif  // SRC_UTIL_INCLUDE_QN_RSLV_H_

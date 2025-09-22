@@ -44,3 +44,41 @@ TEST_CASE("empty names are allowed but produce valid strings") {
   auto q2 = get_inbox_queue(fika::util::make_receiver(""));
   CHECK(q2 == "fika.inbox.");
 }
+
+TEST_CASE("parse_direct_queue: valid inputs") {
+  auto q = fika::util::parse_direct_queue("fika.direct.mailer.to.worker");
+  REQUIRE(q.has_value());
+  CHECK(q->first == "mailer");
+  CHECK(q->second == "worker");
+
+  q = fika::util::parse_direct_queue("fika.direct.a.to.b");
+  REQUIRE(q.has_value());
+  CHECK(q->first == "a");
+  CHECK(q->second == "b");
+}
+
+TEST_CASE("parse_direct_queue: invalid inputs") {
+  CHECK(!fika::util::parse_direct_queue("fika.direct.mailer-to-worker")
+             .has_value());
+  CHECK(!fika::util::parse_direct_queue("fika.direct.queue._to.worker")
+             .has_value());
+  CHECK(!fika::util::parse_direct_queue("fika.direct.mailer.to.").has_value());
+  CHECK(!fika::util::parse_direct_queue("wrong_prefix.mailer.to.worker")
+             .has_value());
+}
+
+TEST_CASE("parse_inbox_queue: valid inputs") {
+  auto q = fika::util::parse_inbox_queue("fika.inbox.worker");
+  REQUIRE(q.has_value());
+  CHECK(*q == "worker");
+
+  q = fika::util::parse_inbox_queue("fika.inbox.binary123");
+  REQUIRE(q.has_value());
+  CHECK(*q == "binary123");
+}
+
+TEST_CASE("parse_inbox_queue: invalid inputs") {
+  CHECK(!fika::util::parse_inbox_queue("fika.inbox.").has_value());
+  CHECK(!fika::util::parse_inbox_queue("wrong.prefix.worker").has_value());
+  CHECK(!fika::util::parse_inbox_queue("").has_value());
+}
