@@ -28,17 +28,22 @@
 #include "config_loader.hpp"
 #include "msg.h"
 #include "worker_configs.h"
+#include "qn_rslv.h"
 
 #include <boost/asio.hpp>
 #include <boost/interprocess/ipc/message_queue.hpp>
+#include <exception>
 // clang-format on
 
 namespace {
 
 const std::map<std::string, std::string> binary_to_queue = {
-    {"detect", DETECT_MESSAGE_QUEUE.data()},
-    {"parse", PARSE_MESSAGE_QUEUE.data()},
-    {"qm", QM_MESSAGE_QUEUE.data()}};
+    {"detect",
+     fika::util::get_direct_queue(fika::util::make_sender("qm"),
+                                  fika::util::make_receiver("detect"))},
+    {"parse", fika::util::get_direct_queue(fika::util::make_sender("qm"),
+                                           fika::util::make_receiver("parse"))},
+    {"qm", fika::util::get_inbox_queue(fika::util::make_receiver("qm"))}};
 
 }  // namespace
 
@@ -55,8 +60,9 @@ supervisor::supervisor(const std::vector<worker_factory_t> &factories,
       boost::interprocess::open_or_create, "supervisor_fika_mq", 100,
       sizeof(CommandResponse));
 
-  for (const auto &f : factories)
+  for (const auto &f : factories) {
     workers_.push_back({f(), WorkerState::Stopped});
+  }
 }
 
 void supervisor::start_workers(const std::string &service_name) {
@@ -83,9 +89,13 @@ void supervisor::stop_workers(const std::string &service_name) {
       // 1. enqueue poison pill
       auto queue = binary_to_queue.find(w.w->name());
       if (queue != binary_to_queue.end()) {
-        queue_mgr_->send_stop_job(queue->second);
-        log::log_info("Sending poison pill to {} on message queue {}",
-                      queue->first, queue->second);
+        try {
+          queue_mgr_->send_stop_job(queue->second);
+          log::log_info("Sending poison pill to {} on message queue {}",
+                        queue->first, queue->second);
+        } catch (const std::exception &e) {
+          log::log_info("Exception {}", e.what());
+        }
       } else {
         log::log_warn(
             "Message queue for poison pill for service {} not found. "

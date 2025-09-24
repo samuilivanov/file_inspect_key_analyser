@@ -38,29 +38,38 @@ namespace fika {
 
 class Service {
  public:
+  using handler_fn = std::function<bool(ipc_message)>;
   using JobHandler =
       std::function<std::pair<std::string, ipc_message>(const ipc_message&)>;
 
   Service(std::unique_ptr<queue_receiver> receiver,
-          std::map<std::string, std::shared_ptr<queue_sender>> senders,
-          JobHandler handler,
           std::size_t threadCount = boost::thread::hardware_concurrency());
   Service(const Service&) = delete;
   Service(Service&&) = delete;
   Service& operator=(const Service&) = delete;
   Service& operator=(Service&&) = delete;
-  ~Service() { stop(); }
+  virtual ~Service() { stop(); }
+  Service() = delete;
 
   void start();
 
   void stop();
 
+  virtual void handle(ipc_message msg) = 0;
+
+  queue_sender* get_sender(const std::string& queue) {
+    auto iter = senders_.find(queue);
+    return iter != senders_.end() ? iter->second.get() : nullptr;
+  }
+
+  void add_sender(std::string queue, std::shared_ptr<queue_sender> sender) {
+    senders_.emplace(std::move(queue), sender);
+  }
+
  private:
   void receiveLoop();
-
   std::unique_ptr<queue_receiver> receiver_;
   std::map<std::string, std::shared_ptr<queue_sender>> senders_;
-  JobHandler handler_;
   boost::asio::thread_pool pool_;
   boost::thread receiverThread_;
   std::atomic<bool> running_;

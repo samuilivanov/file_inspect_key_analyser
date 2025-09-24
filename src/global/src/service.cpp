@@ -22,13 +22,8 @@
 namespace fika {
 
 Service::Service(std::unique_ptr<queue_receiver> receiver,
-                 std::map<std::string, std::shared_ptr<queue_sender>> senders,
-                 JobHandler handler, std::size_t threadCount)
-    : receiver_(std::move(receiver)),
-      senders_(std::move(senders)),
-      handler_(std::move(handler)),
-      pool_(threadCount),
-      running_(false) {}
+                 std::size_t threadCount)
+    : receiver_(std::move(receiver)), pool_(threadCount), running_(false) {}
 
 void Service::start() {
   running_ = true;
@@ -53,27 +48,20 @@ void Service::receiveLoop() {
   while (running_) {
     ipc_message msg{};
     receiver_->receive(msg);
-
-    std::visit(
-        [this](auto&& inner) {
-          using T = std::decay_t<decltype(inner)>;
-
-          if constexpr (std::is_same_v<T, file_job_shm>) {
-            boost::asio::post(pool_, [this, job = inner] {
-              auto [queue, result] = handler_(job);
-              if (auto iter = senders_.find(queue); iter != senders_.end()) {
-                log::log_info("sending to {} queue", queue);
-                iter->second->send(result);
-              } else {
-                log::log_warn("no sender for queue {}", queue);
-              }
-            });
-          } else if constexpr (std::is_same_v<T, poison_pill>) {
-            log::log_info("received poison pill - stopping");
-            running_ = false;
-          }
-        },
-        msg);
+    if (std::holds_alternative<poison_pill>(msg)) {
+      log::log_info("received poison pill - stopping");
+      running_ = false;
+    } else {
+      boost::asio::post(pool_, [this, msg] {
+        try {
+          handle(msg);
+        } catch (const std::exception& e) {
+          log::log_error("Worker exception: {}", e.what());
+        } catch (...) {
+          log::log_error("Unknown worker exception");
+        }
+      });
+    }
   }
   pool_.join();
 }

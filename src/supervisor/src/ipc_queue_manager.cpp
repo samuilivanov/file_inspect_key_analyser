@@ -18,6 +18,8 @@
 
 #include "ipc_queue_manager.h"
 
+#include "msg.h"
+
 namespace fika::detail {
 
 void boost_queue_manager::remove(const std::string &name) {
@@ -33,8 +35,10 @@ void boost_queue_manager::create(const std::string &name,
   queues_[name] = mq;  // keep handle alive
 }
 void boost_queue_manager::send_stop_job(const std::string &queue_name) {
+  log::log_info("Sending stop job to {}", queue_name);
   ipc_message stop_job{poison_pill{}};
   queues_[queue_name]->send(&stop_job, sizeof(stop_job), 0);
+  log::log_info("Sent stop job");
 }
 
 }  // namespace fika::detail

@@ -18,9 +18,12 @@
 
 #include <file_job.h>
 
+#include <memory>
+
 #include "ipc_client.h"
 #include "msg.h"
 #include "qm.h"
+#include "qm_service.h"
 #include "qn_rslv.h"
 #include "service.h"
 
@@ -45,37 +48,25 @@ int main(int argc, char const *argv[]) {
   fika::log::msg_logger_init();
   fika::log::log_info("Starting qm");
   try {
-    /* code */
-    std::map<std::string, std::shared_ptr<fika::queue_sender>> senders;
-    senders.emplace("parse", std::make_shared<fika::MsgQueueSender>(
-                                 fika::util::get_direct_queue(
-                                     fika::util::make_sender("qm"),
-                                     fika::util::make_receiver("parse"))));
-    senders.emplace("detect", std::make_shared<fika::MsgQueueSender>(
-                                  fika::util::get_direct_queue(
-                                      fika::util::make_sender("qm"),
-                                      fika::util::make_receiver("detect"))));
-
     fika::qm q;
     setup();
 
-    auto handler = [&q](const fika::ipc_message &msg)
-        -> std::pair<std::string, fika::ipc_message> {
-      // fika::log::log_info("mgs type: {}, msg id: {}", msg.type, msg.job.id);
-      const auto &file_job = std::get<fika::file_job_shm>(msg);
-      auto r = q.process_results(file_job);
-      fika::ipc_message msg_res{r.second};
-      return std::make_pair(r.first, msg_res);
-    };
-
-    fika::Service service(
+    std::unique_ptr<fika::Service> service = std::make_unique<fika::qm_service>(
         std::make_unique<fika::MsgQueueReceiver>(
             fika::util::get_inbox_queue(fika::util::make_receiver("qm"))),
-        senders, handler);
+        q);
+    service->add_sender("parse", std::make_shared<fika::MsgQueueSender>(
+                                     fika::util::get_direct_queue(
+                                         fika::util::make_sender("qm"),
+                                         fika::util::make_receiver("parse"))));
+    service->add_sender(
+        "detect",
+        std::make_shared<fika::MsgQueueSender>(
+            fika::util::get_direct_queue(fika::util::make_sender("qm"),
+                                         fika::util::make_receiver("detect"))));
+    service->start();
 
-    service.start();
-
-    service.stop();
+    service->stop();
   } catch (const std::exception &e) {
     fika::log::log_info("Service failed: {}", e.what());
     return 1;

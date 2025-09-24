@@ -17,6 +17,7 @@
  */
 
 #include <boost/asio/steady_timer.hpp>
+#include <exception>
 
 #include "config.h"
 #include "config_loader.hpp"
@@ -58,12 +59,17 @@ int main(int argc, char const *argv[]) {
 
     fika::log::log_info("Loaded worker: {} ({})", cfg.name, cfg.path);
   }
-
-  fika::supervisor sup(factories, queues, queue_mgr);
-  sup.reset_queues();
-  sup.create_queues();
-  sup.register_commands();
-  sup.run();
+  try {
+    fika::supervisor sup(factories, queues, queue_mgr);
+    sup.reset_queues();
+    sup.create_queues();
+    sup.register_commands();
+    sup.run();
+  } catch (const std::exception &e) {
+    fika::log::log_error("Exception in supervisor : {}", e.what());
+  } catch (...) {
+    fika::log::log_error("error");
+  }
 
   return 0;
 }

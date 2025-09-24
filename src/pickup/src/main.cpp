@@ -19,25 +19,30 @@
 #include "file_job.h"
 #include "ipc_client.h"
 #include "msg.h"
+#include "pickup.h"
+#include "qn_rslv.h"
 #include "service.h"
-
 int main(int argc, char **argv) {
   fika::log::msg_logger_init();
   fika::log::log_info("Starting pickup service");
   try {
-    std::map<std::string, std::shared_ptr<fika::MsgQueueSender>> senders;
-    senders.emplace("qm",
-                    std::make_shared<fika::MsgQueueSender>("result_queue"));
+    std::map<std::string, std::shared_ptr<fika::queue_sender>> senders;
+    senders.emplace(
+        "qm",
+        std::make_shared<fika::MsgQueueSender>(
+            fika::util::get_inbox_queue(fika::util::make_receiver("qm"))));
 
     // The actual work to be done per job
     auto handler = [&](const fika::ipc_message &msg)
         -> std::pair<std::string, fika::ipc_message> {
-
+      return {"pickup", msg};
     };
 
     fika::Service service(
-        std::make_unique<fika::MsgQueueReceiver>("job_queue_pickup"), senders,
-        handler);
+        std::make_unique<fika::MsgQueueReceiver>(
+            fika::util::get_direct_queue(fika::util::make_sender("qm"),
+                                         fika::util::make_receiver("pickup"))),
+        senders, handler);
 
     service.start();
 
