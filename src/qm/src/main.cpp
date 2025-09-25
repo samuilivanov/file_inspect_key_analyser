@@ -20,6 +20,7 @@
 
 #include <memory>
 
+#include "config.h"
 #include "ipc_client.h"
 #include "msg.h"
 #include "qm.h"
@@ -64,6 +65,9 @@ int main(int argc, char const *argv[]) {
         std::make_shared<fika::MsgQueueSender>(
             fika::util::get_direct_queue(fika::util::make_sender("qm"),
                                          fika::util::make_receiver("detect"))));
+
+    service->add_sender("null_sender", std::make_shared<fika::null_sender>());
+
     service->start();
 
     service->stop();

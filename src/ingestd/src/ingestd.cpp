@@ -29,6 +29,7 @@
 #include "config.h"
 #include "file_job.h"
 #include "msg.h"
+#include "pickup.h"
 #include "qn_rslv.h"
 
 // TODO(samuil): move this to util
@@ -63,21 +64,28 @@ ingestd::ingestd(std::string_view spool_dir)
 void ingestd::handle_file(const std::string &tmp_path,
                           const std::string &filename) {
   std::filesystem::path dst = std::filesystem::path(spool_dir_) / filename;
-  std::filesystem::rename(tmp_path, dst);
+  fika::pickup_service pickup;
+  auto pickup_res = pickup.move_file(tmp_path, dst);
+  if (pickup_res) {
+    file_job_shm job{};
 
-  file_job_shm job{};
+    auto uuid = generate_unique_id();
+    auto len = uuid.copy(job.job_id.data(), job.job_id.size() - 1);
+    job.job_id.at(len) = '\0';
 
-  auto uuid = generate_unique_id();
-  auto len = uuid.copy(job.job_id.data(), job.job_id.size() - 1);
-  job.job_id.at(len) = '\0';
-
-  len = dst.string().copy(job.path.data(), job.path.size() - 1);
-  job.path.at(len) = '\0';
-  log::log_info("File job created with id: {}", std::string(job.job_id.data()));
-  fika::ipc_message msg{job};
-  mq_.send(&msg, sizeof(msg), 0);
-  log::log_info("File job {} send for processing",
-                std::string(job.job_id.data()));
+    len = dst.string().copy(job.path.data(), job.path.size() - 1);
+    job.path.at(len) = '\0';
+    log::log_info("File job created with id: {}",
+                  std::string(job.job_id.data()));
+    fika::ipc_message msg{job};
+    mq_.send(&msg, sizeof(msg), 0);
+    log::log_info("File job {} send for processing",
+                  std::string(job.job_id.data()));
+  } else {
+    auto err = pickup_res.error();
+    log::log_info("Failed to rename file: {} (value: {}, category: {})",
+                  err.message(), err.value(), err.category().name());
+  }
 }
 
 void ingestd::run() {

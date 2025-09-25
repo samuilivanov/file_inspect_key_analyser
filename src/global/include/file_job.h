@@ -101,8 +101,10 @@ struct file_job_shm {
 };
 
 struct poison_pill {};
+struct empty_msg {};
 
-using ipc_message = std::variant<file_job_shm, poison_pill>;  // add more if needed
+using ipc_message =
+    std::variant<file_job_shm, poison_pill>;  // add more if needed
 }  // namespace fika
 
 #endif  // SRC_GLOBAL_INCLUDE_FILE_JOB_H_

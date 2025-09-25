@@ -23,6 +23,7 @@
 #include <string>
 
 #include "file_job.h"
+#include "msg.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/interprocess/ipc/message_queue.hpp>
@@ -68,6 +69,13 @@ class MsgQueueSender : public queue_sender {
 
  private:
   boost::interprocess::message_queue mq_send_;
+};
+
+class null_sender : public queue_sender {
+ public:
+  void send(const ipc_message &result) override {
+    log::log_debug("Send to null sender");
+  }
 };
 
 }  // namespace fika
