@@ -42,6 +42,7 @@ int main() {
                     fika::util::make_sender("qm"),
                     fika::util::make_receiver("parse"))),
             std::move(parsers));
+            // TODO(samuil): add more senders for the different parsers
     service->add_sender(
         "qm",
         std::make_shared<fika::MsgQueueSender>(

@@ -19,8 +19,5 @@
 #ifndef SRC_PARSE_INCLUDE_PARSERS_H_
 #define SRC_PARSE_INCLUDE_PARSERS_H_
 
-#include "parsers/img_parser.h"
-#include "parsers/pdf_parser.h"
-#include "parsers/text_parser.h"
 
 #endif  // SRC_PARSE_INCLUDE_PARSERS_H_

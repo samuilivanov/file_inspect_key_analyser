@@ -27,11 +27,11 @@ namespace {
 std::unique_ptr<fika::parser> create_parser(fika::mime::Type mimeType) {
   switch (mimeType) {
     case fika::mime::Type::Pdf:
-      return std::make_unique<fika::pdf_parser>();
+      return nullptr;
     case fika::mime::Type::TextPlain:
-      return std::make_unique<fika::text_parser>();
+      return nullptr;
     case fika::mime::Type::ImageJpeg:
-      return std::make_unique<fika::img_parser>();
+      return nullptr;
     default:
       return nullptr;
   }

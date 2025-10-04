@@ -105,6 +105,7 @@ add_subdirectory(src/qm)
 add_subdirectory(src/ingestd)
 add_subdirectory(src/supervisor)
 add_subdirectory(src/parse)
+add_subdirectory(src/parsers)
 # add_subdirectory(src/pickup)
 
 if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR MODERN_CMAKE_BUILD_TESTING)

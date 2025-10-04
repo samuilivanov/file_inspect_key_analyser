@@ -26,6 +26,9 @@ namespace {
 fika::file_job_shm process_job(const fika::file_job_shm& job,
                                fika::parser_registry* parsers) {
   fika::file_job_shm job_shm = job;
+  // TODO(samuil): find parser should not be used and just prep the message
+  // queue and send to the designated parser this will be a binary so message
+  // queues will be used
   if (parsers->find_parser(job.mime)) {
     fika::log::log_info("in parsers");
     job_shm.status = fika::Status::DONE;

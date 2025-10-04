@@ -16,29 +16,30 @@
  * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SRC_PARSE_INCLUDE_PARSERS_TEXT_PARSER_H_
-#define SRC_PARSE_INCLUDE_PARSERS_TEXT_PARSER_H_
+#ifndef SRC_PARSE_INCLUDE_PDF_MODULE_PDF_PARSER_H_
+#define SRC_PARSE_INCLUDE_PDF_MODULE_PDF_PARSER_H_
+
+#include <iostream>
 
 #include "parser.h"
 
 namespace fika {
 
-class text_parser : public parser {
+class pdf_parser : public parser {
  private:
   /* data */
  public:
-  text_parser(/* args */) = default;
-  ~text_parser() override = default;
+  pdf_parser(/* args */) = default;
+  ~pdf_parser() = default;
   void parse(const file_job_shm &job) override;
 
   [[nodiscard]] const char *mime_type() const override;
 };
-void text_parser::parse(const file_job_shm &job) {
-  std::cout << "in txt parse";
-}
 
-[[nodiscard]] const char *text_parser::mime_type() const { return "txt"; }
+void pdf_parser::parse(const file_job_shm &job) { std::cout << "in pdf parse"; }
+
+[[nodiscard]] const char *pdf_parser::mime_type() const { return "pdf"; }
 
 }  // namespace fika
 
-#endif  // SRC_PARSE_INCLUDE_PARSERS_TEXT_PARSER_H_
+#endif  // SRC_PARSE_INCLUDE_PDF_MODULE_PDF_PARSER_H_
