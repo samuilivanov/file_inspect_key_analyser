@@ -19,27 +19,35 @@
 #ifndef SRC_PARSE_INCLUDE_PDF_MODULE_PDF_PARSER_H_
 #define SRC_PARSE_INCLUDE_PDF_MODULE_PDF_PARSER_H_
 
-#include <iostream>
-
 #include "parser.h"
 
 namespace fika {
 
 class pdf_parser : public parser {
  private:
-  /* data */
+  std::map<std::string, std::string> metadata_;
+  std::string text_;
+  std::vector<std::string> embedded_files_;
+  std::vector<std::string> warnings_;
+
  public:
-  pdf_parser(/* args */) = default;
-  ~pdf_parser() = default;
   void parse(const file_job_shm &job) override;
 
   [[nodiscard]] const char *mime_type() const override;
+
+  // Optional: retrieve parsed metadata in memory (for internal use or testing)
+  [[nodiscard]] std::map<std::string, std::string> get_metadata()
+      const override;
+
+  // Optional: retrieve text in memory
+  [[nodiscard]] std::string get_text() const override;
+
+  // Optional: retrieve names of embedded files
+  [[nodiscard]] std::vector<std::string> get_embedded_files() const override;
+
+  // Optional: return any warnings or fallback notes
+  [[nodiscard]] std::vector<std::string> get_warnings() const override;
 };
-
-void pdf_parser::parse(const file_job_shm &job) { std::cout << "in pdf parse"; }
-
-[[nodiscard]] const char *pdf_parser::mime_type() const { return "pdf"; }
-
 }  // namespace fika
 
 #endif  // SRC_PARSE_INCLUDE_PDF_MODULE_PDF_PARSER_H_

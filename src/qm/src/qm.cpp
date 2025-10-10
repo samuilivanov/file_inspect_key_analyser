@@ -35,7 +35,7 @@ std::pair<std::string, file_job_shm> qm::add_job(file_job job) {
 
 std::pair<std::string, file_job_shm> qm::process_results(
     const file_job_shm &job) {
-  file_job extended_job = job.to_file_job();
+  file_job extended_job = to_file_job(job);
   // FSM event mapping
   switch (extended_job.status) {
     case Status::NEW:
@@ -65,7 +65,7 @@ std::pair<std::string, file_job_shm> qm::handle_event(file_job *job,
                                                       Event event) {
   file_job_shm fjob{};
   if (sm.apply(job, event)) {
-    fjob.from_file_job(*job);
+    fjob = from_file_job(*job);
   }
   std::string qname;
   switch (job->type) {

@@ -37,25 +37,22 @@ TEST_CASE("file_job_shm copies all fields and roundtrips") {
   fj.stop = true;
 
   file_job_shm shm;
-  bool ok = shm.from_file_job(fj);
+  shm = from_file_job(fj);
 
-  CHECK(ok == true);
   CHECK(std::strcmp(shm.job_id.data(), "job_123") == 0);
   CHECK(std::strcmp(shm.path.data(), "/tmp/file.txt") == 0);
   CHECK(shm.attempts == 2);
   CHECK(shm.status == Status::DETECTING);
   CHECK(shm.type == JobType::DETECTOR);
   CHECK(shm.mime == mime::Type::Pdf);
-  CHECK(shm.stop == 1);
 
-  file_job fj2 = shm.to_file_job();
+  file_job fj2 = to_file_job(shm);
   CHECK(fj2.job_id == fj.job_id.data());
   CHECK(fj2.path == fj.path);
   CHECK(fj2.attempts == fj.attempts);
   CHECK(fj2.status == fj.status);
   CHECK(fj2.type == fj.type);
   CHECK(fj2.mime == fj.mime);
-  CHECK(fj2.stop == fj.stop);
 }
 
 TEST_CASE("Truncation detection for long id and path") {
@@ -71,13 +68,12 @@ TEST_CASE("Truncation detection for long id and path") {
   fj.stop = false;
 
   file_job_shm shm;
-  bool ok = shm.from_file_job(fj);
+  shm = from_file_job(fj);
 
-  CHECK(ok == false);  // truncation occurred
   CHECK(strlen(shm.job_id.data()) == MAX_ID_SIZE - 1);
   CHECK(strlen(shm.path.data()) == MAX_PATH_SIZE - 1);
 
-  file_job fj2 = shm.to_file_job();
+  file_job fj2 = to_file_job(shm);
   CHECK(fj2.job_id.size() == MAX_ID_SIZE - 1);
   CHECK(fj2.path.string().size() == MAX_PATH_SIZE - 1);
 }
@@ -87,5 +83,4 @@ TEST_CASE("Default constructed file_job_shm is zeroed") {
   CHECK(std::strlen(shm.job_id.data()) == 0);
   CHECK(std::strlen(shm.path.data()) == 0);
   CHECK(shm.attempts == 0);
-  CHECK(shm.stop == 0);
 }

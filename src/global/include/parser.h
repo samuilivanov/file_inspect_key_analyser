@@ -42,11 +42,6 @@ class parser {
   // Returns mime type this parser can handle
   [[nodiscard]] virtual const char *mime_type() const = 0;
 
-  // The main entry point: parses a file, writes outputs, returns
-  // success/failure
-  virtual bool parse(const std::string &input_file,
-                     const std::string &output_dir) = 0;
-
   // Optional: retrieve parsed metadata in memory (for internal use or testing)
   [[nodiscard]] virtual std::map<std::string, std::string> get_metadata()
       const = 0;

@@ -36,6 +36,7 @@ constexpr size_t MAX_PATH_SIZE = 256;
 enum class MessageType : std::uint8_t { JOB, HEARTBEAT, COMMAND };
 
 enum class Status : std::uint8_t { NEW, DETECTING, PARSING, DONE, FAILED };
+
 enum class Event : std::uint8_t {
   SUBMIT,
   DETECTION_OK,
@@ -43,6 +44,7 @@ enum class Event : std::uint8_t {
   PARSE_OK,
   PARSE_FAIL
 };
+
 enum class JobType : std::uint8_t { DETECTOR, PARSER, NONE };
 
 struct file_job {
@@ -55,6 +57,8 @@ struct file_job {
   bool stop = false;
 };
 
+// copy from file_job, returns false if truncation occurred
+
 struct file_job_shm {
   std::array<char, MAX_ID_SIZE> job_id = {};
   std::array<char, MAX_PATH_SIZE> path = {};
@@ -62,43 +66,11 @@ struct file_job_shm {
   Status status{};
   JobType type{};
   mime::Type mime{};
-  bool stop = false;
-
-  // copy from file_job, returns false if truncation occurred
-  [[nodiscard]] bool from_file_job(const file_job& fjob) {
-    bool truncated = false;
-
-    if (fjob.job_id.size() >= MAX_ID_SIZE) {
-      truncated = true;
-    }
-    if (fjob.path.string().size() >= MAX_PATH_SIZE) {
-      truncated = true;
-    }
-
-    std::strncpy(job_id.data(), fjob.job_id.c_str(), MAX_ID_SIZE - 1);
-    std::strncpy(path.data(), fjob.path.string().c_str(), MAX_PATH_SIZE - 1);
-
-    attempts = fjob.attempts;
-    status = fjob.status;
-    type = fjob.type;
-    mime = fjob.mime;
-    stop = fjob.stop;
-
-    return !truncated;
-  }
-
-  [[nodiscard]] file_job to_file_job() const {
-    file_job fjob;
-    fjob.job_id = job_id.data();
-    fjob.path = path.data();
-    fjob.attempts = attempts;
-    fjob.status = status;
-    fjob.type = type;
-    fjob.mime = mime;
-    fjob.stop = stop;
-    return fjob;
-  }
 };
+
+[[nodiscard]] file_job to_file_job(file_job_shm job_shm);
+
+[[nodiscard]] file_job_shm from_file_job(const file_job& fjob);
 
 struct poison_pill {};
 struct empty_msg {};

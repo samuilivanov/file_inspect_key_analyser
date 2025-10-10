@@ -1,10 +1,11 @@
 # Testing library
+#TODO add_docktest is not written good should have multiple libs passed
 enable_testing()
 
 function(add_doctest name lib)
   add_executable(${name} ${name}.cpp)
   target_compile_features(${name} PRIVATE cxx_std_23)
-  target_link_libraries(${name} PRIVATE util fmt Boost::boost Boost::log)
+  target_link_libraries(${name} PRIVATE util global fmt Boost::boost Boost::log)
 endfunction()
 
 add_doctest(test_config_loader util)
