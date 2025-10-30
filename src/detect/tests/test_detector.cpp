@@ -1,27 +1,30 @@
 /*
- * This file is part of Fika.
+ * This file is part of file_ingest_key_analyser (FIKA).
  *
- * Fika is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; version 2 of the License.
+ * file_ingest_key_analyser (FIKA) is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; version 2 of the License.
  *
- * Fika is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * file_ingest_key_analyser (FIKA) is distributed in the hope that it will be
+ * useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
+ * along with file_ingest_key_analyser (FIKA).  If not, see
+ * <http://www.gnu.org/licenses/>.
  */
 
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
-#include "detector.h"
-#include "detectors/file_detector.h"
 #include <doctest/doctest.h>
+
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "detector.h"
+#include "detectors/file_detector.h"
 
 // Mock detector
 struct mock_detector : public fika::file_detector {
@@ -30,7 +33,7 @@ struct mock_detector : public fika::file_detector {
   std::string detect(const std::string &) override { return type_; }
   std::string name() const override { return name_; }
 
-private:
+ private:
   std::string name_;
   std::string type_;
 };

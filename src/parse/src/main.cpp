@@ -1,19 +1,20 @@
 /*
- * This file is part of Fika.
+ * This file is part of file_ingest_key_analyser (FIKA).
  *
  * Copyright [2025] Samuil Ivanov
  *
- * Fika is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; version 2 of the License.
+ * file_ingest_key_analyser (FIKA) is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; version 2 of the License.
  *
- * Fika is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * file_ingest_key_analyser (FIKA) is distributed in the hope that it will be
+ * useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
+ * along with file_ingest_key_analyser (FIKA).  If not, see
+ * <http://www.gnu.org/licenses/>.
  */
 
 // clang-format off
@@ -42,7 +43,7 @@ int main() {
                     fika::util::make_sender("qm"),
                     fika::util::make_receiver("parse"))),
             std::move(parsers));
-            // TODO(samuil): add more senders for the different parsers
+    // TODO(samuil): add more senders for the different parsers
     service->add_sender(
         "qm",
         std::make_shared<fika::MsgQueueSender>(

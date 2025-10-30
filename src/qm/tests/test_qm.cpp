@@ -1,27 +1,30 @@
 /*
- * This file is part of Fika.
+ * This file is part of file_ingest_key_analyser (FIKA).
  *
- * Fika is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; version 2 of the License.
+ * file_ingest_key_analyser (FIKA) is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; version 2 of the License.
  *
- * Fika is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * file_ingest_key_analyser (FIKA) is distributed in the hope that it will be
+ * useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Fika.  If not, see <http://www.gnu.org/licenses/>.
+ * along with file_ingest_key_analyser (FIKA).  If not, see
+ * <http://www.gnu.org/licenses/>.
  */
 
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
+
+#include <cassert>
+#include <queue>
+
 #include "file_job.h"
 #include "message_queues.h"
 #include "qipc.h"
 #include "qm.h"
-#include <cassert>
-#include <doctest/doctest.h>
-#include <queue>
 
 using namespace fika;
 
@@ -88,7 +91,7 @@ TEST_CASE("process_result_once updates existing job") {
   q.process_results();
 
   REQUIRE(ipc.sent_jobs.size() ==
-          2); // add_job + DETECTION_OK triggers send_to_worker
+          2);  // add_job + DETECTION_OK triggers send_to_worker
   CHECK_EQ(std::strcmp(ipc.sent_jobs[0].id, "job1"), 0);
   REQUIRE(ipc.sent_jobs[1].mime == MimeType::TEXT);
 }
@@ -129,5 +132,5 @@ TEST_CASE("process_result_once handles DONE result without sending") {
   q.process_results();
 
   // No new job sent to workers for DONE status
-  REQUIRE(ipc.sent_jobs.size() == 1); // only from add_job
+  REQUIRE(ipc.sent_jobs.size() == 1);  // only from add_job
 }

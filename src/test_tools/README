@@ -1,6 +1,6 @@
 # FileSource / Synthetic File Sender
 
-`send_file.py` is a Python script to send files to a Fika ingest service. It can either send an **existing file** or generate **synthetic files** of different types and send them automatically.
+`send_file.py` is a Python script to send files to a file_ingest_key_analyser (FIKA) ingest service. It can either send an **existing file** or generate **synthetic files** of different types and send them automatically.
 
 ## Features
 
