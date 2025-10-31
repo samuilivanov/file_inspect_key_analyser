@@ -19,12 +19,14 @@
 
 #include <boost/asio/steady_timer.hpp>
 #include <exception>
+#include <memory>
 
 #include "config.h"
 #include "config_loader.hpp"
 #include "file_job.h"
 #include "ipc_queue_manager.h"
 #include "msg.h"
+#include "pid_file.h"
 #include "qn_rslv.h"
 #include "queue_descriptor.h"
 #include "supervisor.h"
@@ -33,6 +35,14 @@
 int main(int argc, char const *argv[]) {
   fika::log::msg_logger_init();
   fika::log::log_info("Starting supervisor...");
+  // TODO(samuil): the param that can be passed is --pidfile so that this is not
+  // hardcoded here and it can be loaded using a config file
+  std::string pid_path = "/tmp/fika_supervisor.pid";
+  fika::util::pidfile_lock pidfile(pid_path);
+  if (!pidfile.create_and_lock()) {
+    return -1;
+  }
+
   // TODO(samuil): move this to a separete function
   std::vector<fika::queue_descriptor> queues = {
       {fika::util::get_direct_queue(fika::util::make_sender("qm"),
