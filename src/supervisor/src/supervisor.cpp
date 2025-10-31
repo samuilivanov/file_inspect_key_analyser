@@ -106,6 +106,10 @@ void supervisor::stop_workers(const std::string &service_name) {
       }
 
       // 2. wait for graceful shutdown
+      // TODO(samuil) this wait should be with a timeout and if it times out a
+      // kill using the pidfiles should be triggered. THis means that the other
+      // services need to implement the pidfile and supervisor should have these
+      // and kill them
       w.w->wait();
 
       w.state = WorkerState::Stopped;
