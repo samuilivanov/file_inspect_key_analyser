@@ -18,6 +18,7 @@
  */
 
 #pragma once
+#include <boost/program_options.hpp>
 #include <span>
 #include <string>
 
@@ -34,4 +35,6 @@ struct ParsedCommand {
 /// Throws std::invalid_argument or boost::program_options::error on failure.
 ParsedCommand parse_command_line(std::span<char*> args);
 
+std::string get_cli_help();
+boost::program_options::options_description command_description();
 }  // namespace fika::cli
