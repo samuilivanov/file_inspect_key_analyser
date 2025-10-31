@@ -51,7 +51,7 @@ TEST_CASE("unknown command throws") {
 TEST_CASE("help prints usage") {
   const char *argv[] = {"fika", "--help"};
   int argc = 2;
-  CHECK_THROWS_AS(fika::cli::parse_command_line(
-                      {const_cast<char **>(argv), static_cast<size_t>(argc)}),
-                  std::invalid_argument);
+  auto parsed = fika::cli::parse_command_line(
+      {const_cast<char **>(argv), static_cast<size_t>(argc)});
+  CHECK_EQ(parsed.type, fika::CommandType::Help);
 }

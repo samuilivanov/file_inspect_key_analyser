@@ -17,15 +17,13 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-// clang-format off
 #include "cli.h"
 
 #include <iostream>
 #include <map>
 #include <stdexcept>
 
-#include <boost/program_options.hpp>
-// clang-format on
+#include "commands.h"
 
 namespace fika::cli {
 
@@ -35,16 +33,10 @@ static const std::map<std::string, fika::CommandType> command_map = {
     {"restart", fika::CommandType::Restart},
     {"reload", fika::CommandType::Reload},
     {"status", fika::CommandType::Status},
-    {"logs", fika::CommandType::Logs},
-};
+    {"logs", fika::CommandType::Logs}};
 
-ParsedCommand parse_command_line(const std::span<char*> args) {
-  boost::program_options::options_description desc("Commands");
-  desc.add_options()("help,h", "show help")(
-      "command,c", boost::program_options::value<std::string>(),
-      "command to execute (start|stop|restart|reload|status|logs)")(
-      "service,s", boost::program_options::value<std::string>(),
-      "service name (optional)");
+ParsedCommand parse_command_line(const std::span<char *> args) {
+  boost::program_options::options_description desc = command_description();
 
   boost::program_options::positional_options_description posd;
   posd.add("command", 1);
@@ -56,12 +48,14 @@ ParsedCommand parse_command_line(const std::span<char*> args) {
                                     .positional(posd)
                                     .run(),
                                 var_map);
-  boost::program_options::notify(var_map);
+  try {
+    boost::program_options::notify(var_map);
+  } catch (const boost::program_options::required_option &ex) {
+    return {CommandType::Help, ""};
+  }
 
   if (var_map.count("help") || !var_map.count("command")) {
-    std::ostringstream oss;
-    oss << desc;
-    throw std::invalid_argument(oss.str());
+    return {CommandType::Help, ""};
   }
 
   auto cmd_str = var_map["command"].as<std::string>();
@@ -73,6 +67,23 @@ ParsedCommand parse_command_line(const std::span<char*> args) {
   std::string service =
       var_map.count("service") != 0 ? var_map["service"].as<std::string>() : "";
   return {iter->second, service};
+}
+
+boost::program_options::options_description command_description() {
+  boost::program_options::options_description desc("Commands");
+  desc.add_options()("help,h", "show help")(
+      "command,c", boost::program_options::value<std::string>()->required(),
+      "command to execute (start|stop|restart|reload|status|logs)")(
+      "service,s", boost::program_options::value<std::string>(),
+      "service name (optional)");
+  return desc;
+}
+
+std::string get_cli_help() {
+  boost::program_options::options_description desc = command_description();
+  std::ostringstream oss;
+  oss << desc;
+  return oss.str();
 }
 
 }  // namespace fika::cli

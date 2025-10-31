@@ -17,19 +17,27 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-// clang-format off
+#include <boost/interprocess/ipc/message_queue.hpp>
+#include <boost/process.hpp>
+#include <cstdlib>
+#include <fstream>
 #include <iostream>
 
 #include "cli.h"
 #include "commands.h"
 #include "config.h"
 #include "msg.h"
-
-#include <boost/interprocess/ipc/message_queue.hpp>
-#include <boost/process.hpp>
-// clang-format on
+#include "pid_file.h"
 
 bool is_supervisor_running() {
+  std::string pid_path("/tmp/fika_supervisor.pid");
+  bool locked = fika::util::pidfile_lock::is_locked(pid_path);
+
+  if (!locked) {
+    fika::log::log_info("No supervisor lock, starting a new one.");
+    return false;
+  }
+
   try {
     // Must match the queue name supervisor creates
     boost::interprocess::message_queue mq_(boost::interprocess::open_only,
@@ -39,16 +47,22 @@ bool is_supervisor_running() {
 
     fika::CommandMessage msg{fika::CommandType::Ping};
     mq_.send(&msg, sizeof(msg), 0);
-    std::this_thread::sleep_for(std::chrono::seconds(1));
 
     std::size_t recv_size{};
     unsigned int priority{};
     fika::CommandResponse response;
+    // TODO(samuil): a ping with id should be send and check if the returned id
+    // is the same this will prevent a stale queue from having garbage or
+    // ingeneral try and drain the message queue
+    auto abs_time =
+        boost::chrono::system_clock::now() + boost::chrono::seconds(20);
 
-    if (mq_recv.try_receive(&response, sizeof(response), recv_size, priority)) {
+    if (mq_recv.timed_receive(&response, sizeof(response), recv_size, priority,
+                              abs_time)) {
       fika::log::log_info("Supervisor is alive... Continue no init needed.");
       return true;
     }
+
     fika::log::log_info(
         "Supervisor is dead and queues are in a good state... Starting "
         "supervisor service!");
@@ -62,12 +76,15 @@ bool is_supervisor_running() {
   }
 }
 
-boost::process::child start_supervisor() {
-  return boost::process::child(
-      std::string(BINARIES_LOC) + "/supervisor",
-      boost::process::std_out > stdout,
-      boost::process::std_err >
-          stderr);  // assumes "supervisor" binary is on PATH
+void start_supervisor() {
+  boost::interprocess::message_queue::remove("fika_supervisor_mq");
+  boost::interprocess::message_queue::remove("supervisor_fika_mq");
+
+  auto sup = boost::process::child(std::string(BINARIES_LOC) + "/supervisor",
+                                   boost::process::std_out > stdout,
+                                   boost::process::std_err > stderr);
+
+  sup.detach();  // supervisor runs independently
 }
 
 void send_command(const fika::CommandMessage &msg) {
@@ -78,21 +95,23 @@ void send_command(const fika::CommandMessage &msg) {
 }
 
 int main(int argc, char *argv[]) {
-  boost::process::child sup;
-  if (!is_supervisor_running()) {
-    sup = start_supervisor();
-    sup.detach();  // supervisor keeps running after fika exits
-
-    // give it some time to initialize IPC
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-  }
+  fika::cli::ParsedCommand parsed;
   try {
-    auto parsed =
-        fika::cli::parse_command_line({argv, static_cast<size_t>(argc)});
-    send_command(fika::CommandMessage(parsed.type, parsed.service));
+    parsed = fika::cli::parse_command_line({argv, static_cast<size_t>(argc)});
   } catch (const std::exception &ex) {
     std::cerr << "Error: " << ex.what() << "\n";
     return EXIT_FAILURE;
   }
+
+  if (parsed.type == fika::CommandType::Help) {
+    std::cout << fika::cli::get_cli_help();
+    return EXIT_SUCCESS;
+  }
+
+  if (!is_supervisor_running()) {
+    start_supervisor();
+  }
+
+  send_command(fika::CommandMessage(parsed.type, parsed.service));
   return EXIT_SUCCESS;
 }

@@ -33,7 +33,8 @@ enum class CommandType : std::uint8_t {
   Reload,
   Status,
   Logs,
-  Ping
+  Ping,
+  Help
 };
 
 constexpr size_t SERVICE_NAME_MAX_LEN = 64;
