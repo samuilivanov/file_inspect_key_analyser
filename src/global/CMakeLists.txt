@@ -9,7 +9,8 @@ target_include_directories(global PUBLIC include .)
 # This depends on (header only) boost
 target_link_libraries(global PRIVATE util Boost::boost Boost::log
   Boost::thread
-  Boost::system)
+  Boost::system
+  Boost::program_options)
 
 # All users of this library will need at least C++11
 target_compile_features(global PUBLIC cxx_std_23)

@@ -35,29 +35,8 @@ static const std::map<std::string, fika::CommandType> command_map = {
     {"status", fika::CommandType::Status},
     {"logs", fika::CommandType::Logs}};
 
-ParsedCommand parse_command_line(const std::span<char *> args) {
-  boost::program_options::options_description desc = command_description();
-
-  boost::program_options::positional_options_description posd;
-  posd.add("command", 1);
-
-  boost::program_options::variables_map var_map;
-  boost::program_options::store(boost::program_options::command_line_parser(
-                                    static_cast<int>(args.size()), args.data())
-                                    .options(desc)
-                                    .positional(posd)
-                                    .run(),
-                                var_map);
-  try {
-    boost::program_options::notify(var_map);
-  } catch (const boost::program_options::required_option &ex) {
-    return {CommandType::Help, ""};
-  }
-
-  if (var_map.count("help") || !var_map.count("command")) {
-    return {CommandType::Help, ""};
-  }
-
+ParsedCommand parse_command_line(
+    const boost::program_options::variables_map &var_map) {
   auto cmd_str = var_map["command"].as<std::string>();
   auto iter = command_map.find(cmd_str);
   if (iter == command_map.end()) {
@@ -71,19 +50,12 @@ ParsedCommand parse_command_line(const std::span<char *> args) {
 
 boost::program_options::options_description command_description() {
   boost::program_options::options_description desc("Commands");
-  desc.add_options()("help,h", "show help")(
+  desc.add_options()(
       "command,c", boost::program_options::value<std::string>()->required(),
       "command to execute (start|stop|restart|reload|status|logs)")(
       "service,s", boost::program_options::value<std::string>(),
       "service name (optional)");
   return desc;
-}
-
-std::string get_cli_help() {
-  boost::program_options::options_description desc = command_description();
-  std::ostringstream oss;
-  oss << desc;
-  return oss.str();
 }
 
 }  // namespace fika::cli

@@ -19,16 +19,20 @@
 
 #include <boost/interprocess/ipc/message_queue.hpp>
 #include <boost/process.hpp>
+#include <cmath>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
 
 #include "cli.h"
+#include "cli_parser.h"
 #include "commands.h"
 #include "config.h"
 #include "msg.h"
 #include "pid_file.h"
 
+// TODO(samuil): the hardcodes string "/tmp/fika_supervisor.pid" should be taken
+// from a config file
 bool is_supervisor_running() {
   std::string pid_path("/tmp/fika_supervisor.pid");
   bool locked = fika::util::pidfile_lock::is_locked(pid_path);
@@ -81,6 +85,7 @@ void start_supervisor() {
   boost::interprocess::message_queue::remove("supervisor_fika_mq");
 
   auto sup = boost::process::child(std::string(BINARIES_LOC) + "/supervisor",
+                                   "--pidfile=/tmp/fika_supervisor.pid",
                                    boost::process::std_out > stdout,
                                    boost::process::std_err > stderr);
 
@@ -95,17 +100,24 @@ void send_command(const fika::CommandMessage &msg) {
 }
 
 int main(int argc, char *argv[]) {
-  fika::cli::ParsedCommand parsed;
-  try {
-    parsed = fika::cli::parse_command_line({argv, static_cast<size_t>(argc)});
-  } catch (const std::exception &ex) {
-    std::cerr << "Error: " << ex.what() << "\n";
-    return EXIT_FAILURE;
+  fika::cli_parser cli(argc, argv);
+  cli.initialize(fika::default_option::help | fika::default_option::version);
+  cli.set_options_description(fika::cli::command_description());
+  auto vm = cli.parse();
+  if (!vm.has_value()) {
+    return -1;
   }
 
-  if (parsed.type == fika::CommandType::Help) {
-    std::cout << fika::cli::get_cli_help();
-    return EXIT_SUCCESS;
+  // TODO(samuil): the parse_command_line should become a callback and let the
+  // cli_parser call the result will be a command and service that is then
+  // passed to send_command
+  fika::cli::ParsedCommand parsed;
+  try {
+    parsed = fika::cli::parse_command_line(vm.value());
+  } catch (const std::exception &ex) {
+    std::cerr << "Error: " << ex.what() << "\n";
+    cli.print_help();
+    return EXIT_FAILURE;
   }
 
   if (!is_supervisor_running()) {

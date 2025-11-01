@@ -19,6 +19,7 @@
 
 #pragma once
 #include <boost/program_options.hpp>
+#include <boost/program_options/variables_map.hpp>
 #include <functional>
 #include <iostream>
 #include <map>
@@ -27,12 +28,28 @@
 
 namespace fika {
 
+enum class default_option : unsigned {
+  none = 0,
+  pidfile = 1 << 0,
+  verbose = 1 << 1,
+  version = 1 << 2,
+  help = 1 << 3,
+  all = pidfile | verbose | version | help
+};
+
+// Enable bitwise operators
+inline default_option operator|(default_option a, default_option b) {
+  return static_cast<default_option>(static_cast<unsigned>(a) |
+                                     static_cast<unsigned>(b));
+}
+inline bool has_flag(default_option flags, default_option flag) {
+  return (static_cast<unsigned>(flags) & static_cast<unsigned>(flag)) != 0;
+}
+
 // Generic CLI parser, reusable for any app
 class cli_parser {
  public:
-  using callback_t =
-      std::function<void(const boost::program_options::variables_map&)>;
-
+  void initialize(default_option flags = default_option::all);
   cli_parser(int argc, char** argv) : argc_(argc), argv_(argv) {}
 
   // Add argument with optional callback
@@ -69,9 +86,19 @@ class cli_parser {
     }
   }
 
-  boost::program_options::variables_map parse();
+  template <typename T>
+  [[nodiscard]] T get_option(const std::string& name) {
+    if (!vm_.count(name)) {
+      throw std::runtime_error("Option not found: " + name);
+    }
+    return vm_[name].as<T>();
+  }
+
+  [[nodiscard]] std::optional<boost::program_options::variables_map> parse();
 
   void print_help() const;
+  void set_options_description(
+      const boost::program_options::options_description& desc);
 
  private:
   int argc_;
@@ -84,5 +111,6 @@ class cli_parser {
   std::map<std::string,
            std::function<void(const boost::program_options::variables_map&)>>
       bool_callbacks_;
+  boost::program_options::variables_map vm_;
 };
 }  // namespace fika

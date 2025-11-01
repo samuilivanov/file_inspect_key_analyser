@@ -43,10 +43,10 @@ TEST_CASE("cli_parser basic parsing") {
   auto vm = cli.parse();
 
   // Check variables_map values
-  CHECK(vm.count("verbose") == 1);
-  CHECK(vm["verbose"].as<bool>() == true);
-  CHECK(vm.count("config") == 1);
-  CHECK(vm["config"].as<std::string>() == "my.cfg");
+  CHECK(vm->count("verbose") == 1);
+  CHECK(vm.value()["verbose"].as<bool>() == true);
+  CHECK(vm->count("config") == 1);
+  CHECK(vm.value()["config"].as<std::string>() == "my.cfg");
 
   // Check callbacks triggered
   CHECK(callback_called == true);
@@ -72,11 +72,11 @@ TEST_CASE("cli_parser default values") {
   auto vm = cli.parse();
 
   // Check defaults
-  CHECK(vm.count("config") == 1);
-  CHECK(vm["config"].as<std::string>() == "default.cfg");
+  CHECK(vm->count("config") == 1);
+  CHECK(vm.value()["config"].as<std::string>() == "default.cfg");
 
   // Boolean flag not passed but present since it's a switch
-  CHECK(vm.count("verbose") == 1);
+  CHECK(vm->count("verbose") == 1);
 
   // Callbacks
   CHECK(config_value == "default.cfg");
@@ -116,7 +116,7 @@ TEST_CASE("cli_parser bool option") {
   auto vm = cli.parse();
 
   // Check variables_map
-  CHECK(vm["verbose"].as<bool>() == true);
+  CHECK(vm.value()["verbose"].as<bool>() == true);
   // Check callback was triggered correctly
   CHECK(verbose_value == true);
 }
@@ -134,7 +134,7 @@ TEST_CASE("cli_parser string option") {
 
   auto vm = cli.parse();
 
-  CHECK(vm["config"].as<std::string>() == "my_config.cfg");
+  CHECK(vm.value()["config"].as<std::string>() == "my_config.cfg");
   CHECK(config_value == "my_config.cfg");
 }
 
@@ -150,7 +150,7 @@ TEST_CASE("cli_parser int option") {
 
   auto vm = cli.parse();
 
-  CHECK(vm["threads"].as<int>() == 8);
+  CHECK(vm.value()["threads"].as<int>() == 8);
   CHECK(threads_value == 8);
 }
 
@@ -176,15 +176,15 @@ TEST_CASE("cli_parser default values") {
   auto vm = cli.parse();
 
   // Bool default
-  CHECK(vm["verbose"].as<bool>() == false);
+  CHECK(vm.value()["verbose"].as<bool>() == false);
   CHECK(verbose_value == false);
 
   // String default
-  CHECK(vm["config"].as<std::string>() == "default.cfg");
+  CHECK(vm.value()["config"].as<std::string>() == "default.cfg");
   CHECK(config_value == "default.cfg");
 
   // Int default
-  CHECK(vm["threads"].as<int>() == 4);
+  CHECK(vm.value()["threads"].as<int>() == 4);
   CHECK(threads_value == 4);
 }
 
@@ -222,4 +222,55 @@ TEST_CASE("cli_parser triggers boost::program_options::error") {
 
   std::string output = oss.str();
   CHECK(output.find("threads") != std::string::npos);  // help includes "config"
+}
+
+TEST_CASE("cli_parser init sets predefined options") {
+  // Simulate CLI args
+  const char* argv[] = {
+      "fika_service",             // binary name
+      "--pidfile=/tmp/test.pid",  // set pidfile
+      "--verbose",                // set verbose flag
+  };
+  int argc = sizeof(argv) / sizeof(argv[0]);
+
+  cli_parser parser(argc, const_cast<char**>(argv));
+  parser.initialize(fika::default_option::verbose |
+                    fika::default_option::pidfile);
+  parser.parse();
+
+  SUBCASE("get_option returns correct pidfile path") {
+    auto pidfile = parser.get_option<std::string>("pidfile");
+    CHECK(pidfile == "/tmp/test.pid");
+  }
+
+  SUBCASE("get_option returns true for verbose") {
+    auto verbose = parser.get_option<bool>("verbose");
+    CHECK(verbose == true);
+  }
+}
+
+TEST_CASE("cli_parser uses default values when not specified") {
+  const char* argv[] = {
+      "fika_service", "--pidfile=/tmp/test.pid",  // set pidfile
+  };
+  int argc = sizeof(argv) / sizeof(argv[0]);
+
+  cli_parser parser(argc, const_cast<char**>(argv));
+  parser.initialize(fika::default_option::verbose |
+                    fika::default_option::pidfile);
+  parser.parse();
+
+  auto verbose = parser.get_option<bool>("verbose");
+  CHECK(verbose == false);
+}
+
+TEST_CASE("cli_parser get_option throws on missing key") {
+  const char* argv[] = {"fika_service"};
+  int argc = sizeof(argv) / sizeof(argv[0]);
+
+  cli_parser parser(argc, const_cast<char**>(argv));
+  parser.parse();  // no init
+
+  CHECK_THROWS_AS(parser.get_option<std::string>("nonexistent"),
+                  std::runtime_error);
 }

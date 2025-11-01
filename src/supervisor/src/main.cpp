@@ -21,6 +21,7 @@
 #include <exception>
 #include <memory>
 
+#include "cli_parser.h"
 #include "config.h"
 #include "config_loader.hpp"
 #include "file_job.h"
@@ -32,12 +33,17 @@
 #include "supervisor.h"
 #include "worker_configs.h"
 
-int main(int argc, char const *argv[]) {
+int main(int argc, char *argv[]) {
   fika::log::msg_logger_init();
   fika::log::log_info("Starting supervisor...");
-  // TODO(samuil): the param that can be passed is --pidfile so that this is not
-  // hardcoded here and it can be loaded using a config file
-  std::string pid_path = "/tmp/fika_supervisor.pid";
+  fika::cli_parser cli(argc, argv);
+  cli.initialize(fika::default_option::pidfile | fika::default_option::help);
+  auto vm = cli.parse();
+  if (!vm.has_value()) {
+    return -1;
+  }
+
+  auto pid_path = cli.get_option<std::string>("pidfile");
   fika::util::pidfile_lock pidfile(pid_path);
   if (!pidfile.create_and_lock()) {
     return -1;

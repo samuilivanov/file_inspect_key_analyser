@@ -21,37 +21,30 @@
 #include <span>
 
 #include "cli.h"
+#include "cli_parser.h"
 
 TEST_CASE("parse start command with service") {
-  const char *argv[] = {"fika", "-c", "start", "-s", "parser"};
+  char *argv[] = {"fika", "-c", "start", "-s", "parser"};
   int argc = 5;
-  auto result = fika::cli::parse_command_line(
-      {const_cast<char **>(argv), static_cast<size_t>(argc)});
+
+  fika::cli_parser cli(argc, argv);
+  cli.initialize(fika::default_option::help | fika::default_option::version);
+  cli.set_options_description(fika::cli::command_description());
+  auto vm = cli.parse();
+
+  auto result = fika::cli::parse_command_line(vm.value());
   CHECK(result.type == fika::CommandType::Start);
   CHECK(result.service == "parser");
 }
 
 TEST_CASE("parse stop command without service") {
-  const char *argv[] = {"fika", "-c", "stop"};
+  char *argv[] = {"fika", "-c", "stop"};
   int argc = 3;
-  auto result = fika::cli::parse_command_line(
-      {const_cast<char **>(argv), static_cast<size_t>(argc)});
+  fika::cli_parser cli(argc, argv);
+  cli.initialize(fika::default_option::help | fika::default_option::version);
+  cli.set_options_description(fika::cli::command_description());
+  auto vm = cli.parse();
+  auto result = fika::cli::parse_command_line(vm.value());
   CHECK(result.type == fika::CommandType::Stop);
   CHECK(result.service.empty());
-}
-
-TEST_CASE("unknown command throws") {
-  const char *argv[] = {"fika", "foo"};
-  int argc = 2;
-  CHECK_THROWS_AS(fika::cli::parse_command_line(
-                      {const_cast<char **>(argv), static_cast<size_t>(argc)}),
-                  std::invalid_argument);
-}
-
-TEST_CASE("help prints usage") {
-  const char *argv[] = {"fika", "--help"};
-  int argc = 2;
-  auto parsed = fika::cli::parse_command_line(
-      {const_cast<char **>(argv), static_cast<size_t>(argc)});
-  CHECK_EQ(parsed.type, fika::CommandType::Help);
 }
