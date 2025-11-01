@@ -31,9 +31,8 @@ struct ParsedCommand {
   std::string service;
 };
 
-/// Parse argc/argv and return a ParsedCommand.
-/// Throws std::invalid_argument or boost::program_options::error on failure.
-ParsedCommand parse_command_line(std::span<char*> args);
+ParsedCommand parse_command_line(
+    const boost::program_options::variables_map &var_map);
 
 std::string get_cli_help();
 boost::program_options::options_description command_description();
