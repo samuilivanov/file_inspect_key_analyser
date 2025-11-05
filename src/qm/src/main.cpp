@@ -21,9 +21,11 @@
 
 #include <memory>
 
+#include "cli_parser.h"
 #include "config.h"
 #include "ipc_client.h"
 #include "msg.h"
+#include "pid_file.h"
 #include "qm.h"
 #include "qm_service.h"
 #include "qn_rslv.h"
@@ -46,9 +48,24 @@ void setup() {
 
 }  // namespace
 
-int main(int argc, char const *argv[]) {
+int main(int argc, char *argv[]) {
   fika::log::msg_logger_init();
   fika::log::log_info("Starting qm");
+  // TODO(samuil): this part is repeating in the services maybe put in a
+  // separete class
+  fika::cli_parser cli(argc, argv);
+  cli.initialize(fika::default_option::pidfile);
+  auto vm = cli.parse();
+  if (!vm.has_value()) {
+    return -1;
+  }
+
+  auto pid_path = cli.get_option<std::string>("pidfile");
+  fika::util::pidfile_lock pidfile(pid_path);
+  if (!pidfile.create_and_lock()) {
+    return -1;
+  }
+
   try {
     fika::qm q;
     setup();

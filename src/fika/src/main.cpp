@@ -92,6 +92,9 @@ void start_supervisor() {
   sup.detach();  // supervisor runs independently
 }
 
+// TODO(samuil): this needs more reading if fike when it open and created the
+// message queue will this break when fika finished
+// or is the message queue in some undefined state it shouldn't 
 void send_command(const fika::CommandMessage &msg) {
   boost::interprocess::message_queue mq_(boost::interprocess::open_or_create,
                                          "fika_supervisor_mq", 100,

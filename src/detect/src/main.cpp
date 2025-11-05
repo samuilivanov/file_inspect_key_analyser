@@ -22,16 +22,31 @@
 #include <csignal>
 #include <memory>
 
+#include "cli_parser.h"
 #include "detect_service.h"
 #include "detectors/magic_api.h"
 #include "ipc_client.h"
 #include "msg.h"
+#include "pid_file.h"
 #include "qn_rslv.h"
 #include "service.h"
 
-int main(int argc, char const *argv[]) {
+int main(int argc, char *argv[]) {
   fika::log::msg_logger_init();
   fika::log::log_info("Starting detect service");
+  fika::cli_parser cli(argc, argv);
+  cli.initialize(fika::default_option::pidfile);
+  auto vm = cli.parse();
+  if (!vm.has_value()) {
+    return -1;
+  }
+
+  auto pid_path = cli.get_option<std::string>("pidfile");
+  fika::util::pidfile_lock pidfile(pid_path);
+  if (!pidfile.create_and_lock()) {
+    return -1;
+  }
+
   try {
     std::vector<std::unique_ptr<fika::file_detector>> detectors;
 
