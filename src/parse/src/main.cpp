@@ -18,9 +18,11 @@
  */
 
 // clang-format off
+#include "cli_parser.h"
 #include "ipc_client.h"
 #include "msg.h"
 #include "parser_registry.h"
+#include "pid_file.h"
 #include "service.h"
 #include "qn_rslv.h"
 #include "parse_service.h"
@@ -30,9 +32,21 @@
 #include <memory>
 // clang-format on
 
-int main() {
+int main(int argc, char *argv[]) {
   fika::log::msg_logger_init();
   fika::log::log_info("Starting parser service");
+  fika::cli_parser cli(argc, argv);
+  cli.initialize(fika::default_option::pidfile);
+  auto vm = cli.parse();
+  if (!vm.has_value()) {
+    return -1;
+  }
+
+  auto pid_path = cli.get_option<std::string>("pidfile");
+  fika::util::pidfile_lock pidfile(pid_path);
+  if (!pidfile.create_and_lock()) {
+    return -1;
+  }
   try {
     fika::parser_registry parsers;
 
