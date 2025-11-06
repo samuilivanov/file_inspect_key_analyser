@@ -39,7 +39,7 @@ class supervisor : public supervisor_inter {
  public:
   using worker_factory_t = std::function<std::unique_ptr<worker>()>;
 
-  explicit supervisor(const std::vector<worker_factory_t> &factories,
+  explicit supervisor(const worker_configs &factories,
                       std::vector<fika::queue_descriptor> queues,
                       std::shared_ptr<ipc_queue_manager> queue_mgr);
 

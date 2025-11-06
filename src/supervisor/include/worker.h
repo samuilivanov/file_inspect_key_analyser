@@ -31,6 +31,7 @@
 #include <boost/process.hpp>
 #include <sys/prctl.h>
 #include <boost/process/extend.hpp>
+#include "worker_configs.h"
 
 // clang-format on
 
@@ -68,25 +69,23 @@ class boost_child_process : public child_process {
  private:
   mutable boost::process::child proc_;
   std::string proc_name;
-  // boost::asio::steady_timer timer_;
 };
 
 class worker {
  public:
-  using process_factory_t = std::function<std::unique_ptr<child_process>()>;
-
-  explicit worker(process_factory_t factory);
+  explicit worker(worker_config conf);
   void start();
   void stop();
   bool is_alive() const;
   void restart();
   void wait() const;
   std::string name() const;
+  [[nodiscard]] bool start_on_boot() const;
 
  private:
   std::chrono::steady_clock::time_point last_heartbeat_;
   std::unique_ptr<child_process> process_;
-  process_factory_t factory_;
+  worker_config conf_;
 };
 
 enum class WorkerState { Running, Stopped };

@@ -28,12 +28,14 @@
 #include "config.h"
 #include "config_loader.hpp"
 #include "msg.h"
+#include "worker.h"
 #include "worker_configs.h"
 #include "qn_rslv.h"
 
 #include <boost/asio.hpp>
 #include <boost/interprocess/ipc/message_queue.hpp>
 #include <exception>
+#include <memory>
 // clang-format on
 
 namespace {
@@ -50,7 +52,7 @@ const std::map<std::string, std::string> binary_to_queue = {
 
 namespace fika {
 
-supervisor::supervisor(const std::vector<worker_factory_t> &factories,
+supervisor::supervisor(const worker_configs &factories,
                        std::vector<queue_descriptor> queues,
                        std::shared_ptr<ipc_queue_manager> queue_mgr)
     : queues_(std::move(queues)), queue_mgr_(std::move(queue_mgr)) {
@@ -61,17 +63,30 @@ supervisor::supervisor(const std::vector<worker_factory_t> &factories,
       boost::interprocess::open_or_create, "supervisor_fika_mq", 100,
       sizeof(CommandResponse));
 
-  for (const auto &f : factories) {
-    workers_.push_back({f(), WorkerState::Stopped});
+  for (const auto &f : factories.workers) {
+    worker_entity ent = {std::make_unique<worker>(f), WorkerState::Stopped};
+    workers_.emplace_back(std::move(ent));
   }
 }
 
 void supervisor::start_workers(const std::string &service_name) {
-  for (auto &w : workers_) {
-    if (service_name.empty() || w.w->name() == service_name) {
-      w.w->start();
-      w.state = WorkerState::Running;
+  log::log_info("Starting worker {}", service_name);
+  if (service_name.empty()) {
+    for (auto &w : workers_) {
+      if (w.w->start_on_boot()) {
+        w.w->start();
+        w.state = WorkerState::Running;
+      }
     }
+    return;
+  }
+  auto it = std::find_if(workers_.begin(), workers_.end(),
+                         [&service_name](const worker_entity &entity) {
+                           return entity.w->name() == service_name &&
+                                  entity.w->start_on_boot();
+                         });
+  if (it != workers_.end()) {
+    it->w->start();
   }
 }
 

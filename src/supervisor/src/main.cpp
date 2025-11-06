@@ -66,18 +66,8 @@ int main(int argc, char *argv[]) {
   auto configs =
       fika::config::load<fika::worker_configs>(SUPERVISOR_CONF.data());
 
-  std::vector<fika::supervisor::worker_factory_t> factories;
-  for (auto &cfg : configs.workers) {
-    factories.emplace_back([cfg]() -> std::unique_ptr<fika::worker> {
-      return std::make_unique<fika::worker>([cfg]() {
-        return std::make_unique<fika::boost_child_process>(cfg.path, cfg.args);
-      });
-    });
-
-    fika::log::log_info("Loaded worker: {} ({})", cfg.name, cfg.path);
-  }
   try {
-    fika::supervisor sup(factories, queues, queue_mgr);
+    fika::supervisor sup(configs, queues, queue_mgr);
     sup.reset_queues();
     sup.create_queues();
     sup.register_commands();
@@ -87,6 +77,6 @@ int main(int argc, char *argv[]) {
   } catch (...) {
     fika::log::log_error("error");
   }
-
+  fika::log::log_info("Supervisor exiting");
   return 0;
 }

@@ -2,21 +2,33 @@
   {
     "name": "qm",
     "path": "@CMAKE_BINARY_DIR@/bin/qm",
-    "args": ["--pidfile=/tmp/fika_qm.pid"]
+    "args": [
+      "--pidfile=/tmp/fika_qm.pid"
+    ],
+    "start_on_boot": true
   },
   {
     "name": "ingestd",
     "path": "@CMAKE_BINARY_DIR@/bin/ingestd",
-    "args": ["--pidfile=/tmp/fika_ingestd.pid"]
+    "args": [
+      "--pidfile=/tmp/fika_ingestd.pid"
+    ],
+    "start_on_boot": true
   },
   {
     "name": "detect",
     "path": "@CMAKE_BINARY_DIR@/bin/detect",
-    "args": ["--pidfile=/tmp/fika_detect.pid"]
+    "args": [
+      "--pidfile=/tmp/fika_detect.pid"
+    ],
+    "start_on_boot": true
   },
   {
     "name": "parse",
     "path": "@CMAKE_BINARY_DIR@/bin/parse",
-    "args": ["--pidfile=/tmp/fika_parse.pid"]
+    "args": [
+      "--pidfile=/tmp/fika_parse.pid"
+    ],
+    "start_on_boot": true
   }
 ]

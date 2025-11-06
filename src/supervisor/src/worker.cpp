@@ -19,20 +19,30 @@
 
 #include "worker.h"
 
+#include "worker_configs.h"
+
 namespace fika {
 
-worker::worker(process_factory_t factory) : factory_(std::move(factory)) {}
+worker::worker(worker_config conf) : conf_(std::move(conf)) {}
 
 void worker::start() {
-  process_ = factory_();
-  last_heartbeat_ = std::chrono::steady_clock::now();
+  if (process_ && process_->running()) {
+    return;
+  }
+
+  // build a fresh child_process from the spec
+  process_ = std::make_unique<boost_child_process>(conf_.path, conf_.args);
 }
 void worker::stop() {
-  if (process_) process_->terminate();
+  if (process_) {
+    process_->terminate();
+  }
 }
 
 void worker::wait() const {
-  if (process_) process_->wait();
+  if (process_) {
+    process_->wait();
+  }
 }
 bool worker::is_alive() const { return process_ && process_->running(); }
 
@@ -43,6 +53,7 @@ void worker::restart() {
   start();
 }
 
-std::string worker::name() const { return process_->name(); }
+std::string worker::name() const { return conf_.name; }
+[[nodiscard]] bool worker::start_on_boot() const { return conf_.start_on_boot; }
 
 }  // namespace fika

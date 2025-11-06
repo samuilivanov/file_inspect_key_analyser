@@ -32,12 +32,14 @@ struct worker_config {
   std::string name;
   std::string path;
   std::vector<std::string> args;
+  bool start_on_boot = false;
 
   static worker_config fromJson(const nlohmann::json &j) {
     worker_config wc;
     wc.name = j.at("name").get<std::string>();
     wc.path = j.at("path").get<std::string>();
     wc.args = j.at("args").get<std::vector<std::string>>();
+    wc.start_on_boot = j.at("start_on_boot").get<bool>();
     return wc;
   }
 };
