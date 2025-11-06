@@ -29,9 +29,14 @@
 
 #include <boost/asio.hpp>
 #include <boost/process.hpp>
+#include <sys/prctl.h>
+#include <boost/process/extend.hpp>
+
 // clang-format on
 
 namespace fika {
+
+const auto on_setup = [](auto &exec) { prctl(PR_SET_PDEATHSIG, SIGTERM); };
 
 struct child_process {
   virtual ~child_process() = default;
@@ -45,7 +50,8 @@ class boost_child_process : public child_process {
  public:
   boost_child_process(const std::string &path,
                       const std::vector<std::string> &args)
-      : proc_(path, boost::process::args(args)),
+      : proc_(path, boost::process::extend::on_exec_setup(on_setup),
+              boost::process::args(args)),
         proc_name(std::filesystem::path(path).filename()) {}
 
   bool running() const override { return proc_.running(); }
